@@ -2,6 +2,7 @@ import {
   TOTAL_TURNS,
   advanceMatch,
   applyClientMessage,
+  displayedScores,
   initialMatch,
   matchResult,
   normalizeName,
@@ -119,6 +120,16 @@ describe("차례", () => {
     state = advanceMatch(state, state.rollingUntil!, ids());
     // 다음 턴에 지난 턴 번호로 다시 보내도 버린다.
     expect(apply(state, { ...shot, playerId: "p2" }).state).toBe(state);
+  });
+
+  it("원반이 굴러가는 동안에는 던지기 전 점수를 보여 준다", () => {
+    let state = started();
+    state = apply(state, { kind: "shoot", playerId: "p1", turn: 0, angle: 0, power: 0.85 }, 3_100)
+      .state;
+    expect(state.scores.A).toBe(10);
+    expect(displayedScores(state).A).toBe(0);
+    state = advanceMatch(state, state.rollingUntil!, ids());
+    expect(displayedScores(state).A).toBe(10);
   });
 
   it("제한 시간 안에 안 던지면 0점으로 넘어간다", () => {

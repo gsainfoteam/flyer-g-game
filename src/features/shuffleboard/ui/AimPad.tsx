@@ -13,11 +13,13 @@ import { SEAT_FILL } from "./seat-style";
  * 조작감에 섞이지 않는다.
  */
 /** 이만큼(px) 당기면 힘 100% */
-const MAX_PULL = 220;
+const MAX_PULL = 180;
 /** 이보다 약하면 실수로 보고 던지지 않는다 */
 const MIN_POWER = 0.05;
-const PAD_HEIGHT = 320;
+const PAD_HEIGHT = 300;
 const PUCK_R = 26;
+/** 원반의 처음 자리. 아래로 당길 공간이 남도록 위쪽에 둔다. */
+const REST_Y = 72;
 
 interface Aim {
   angle: number;
@@ -75,13 +77,14 @@ export function AimPad({ seat, enabled, onShoot }: AimPadProps) {
   };
 
   const cx = width / 2;
-  const cy = PAD_HEIGHT - 90;
-  // 당긴 만큼 원반이 아래로 따라온다. 조준선은 반대쪽으로 뻗는다.
+  const cy = REST_Y;
+  // 당긴 만큼 원반이 아래로 따라온다. 조준선은 반대쪽(위)으로 뻗는다.
   const radians = aim ? (aim.angle * Math.PI) / 180 : 0;
-  const pull = aim ? aim.power * 60 : 0;
+  const pull = aim ? aim.power * (PAD_HEIGHT - REST_Y - PUCK_R - 48) : 0;
   const puckX = cx - Math.sin(radians) * pull;
   const puckY = cy + Math.cos(radians) * pull;
-  const reach = aim ? 40 + aim.power * 170 : 0;
+  // 원반 가장자리에서 패드 위 끝 바로 앞까지
+  const reach = aim ? PUCK_R + 8 + aim.power * (REST_Y - PUCK_R - 14) : 0;
   const tipX = cx + Math.sin(radians) * reach;
   const tipY = cy - Math.cos(radians) * reach;
 

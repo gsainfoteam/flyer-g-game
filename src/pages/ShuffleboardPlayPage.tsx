@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useParams } from "react-router";
 import {
   SEATS,
+  displayedScores,
   secondsLeft,
   seatOfTurn,
   shooterSeat,
@@ -163,7 +164,7 @@ export function ShuffleboardPlayPage() {
           from={190}
           to={412}
           labelSize={12}
-          className="mx-auto h-[34dvh] w-full"
+          className="mx-auto h-[26dvh] w-full"
         />
       </div>
       <AimPad seat={seat} enabled={enabled} onShoot={player.shoot} />
@@ -183,7 +184,7 @@ function Scoreboard({ state, mySeat }: { state: MatchState; mySeat: Seat }) {
             {seat}팀{seat === mySeat ? " · 나" : ""}
           </p>
           <p className="flex items-baseline justify-between">
-            <span className="text-title text-ink tabular-nums">{state.scores[seat]}</span>
+            <span className="text-title text-ink tabular-nums">{displayedScores(state)[seat]}</span>
             <span className="text-caption text-ink-subtle tabular-nums">
               {SHUFFLEBOARD_RULES.shotsPerSeat - shotsTaken(state, seat)}개 남음
             </span>

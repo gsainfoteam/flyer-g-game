@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import {
   SEATS,
+  displayedScores,
   secondsLeft,
   seatOfTurn,
   shooterSeat,
@@ -168,7 +169,7 @@ function SeatPanel({ seat, state }: { seat: Seat; state: MatchState }) {
               key={index}
               className={cn(
                 "size-6 rounded-pill",
-                index < taken ? "bg-surface-muted" : SEAT_DOT[seat],
+                index < taken ? "bg-line-strong" : SEAT_DOT[seat],
               )}
             />
           ))}
@@ -178,7 +179,7 @@ function SeatPanel({ seat, state }: { seat: Seat; state: MatchState }) {
         </div>
       </div>
       <p className={cn("text-[150px] leading-none font-extrabold tracking-tight tabular-nums", SEAT_TEXT[seat])}>
-        {state.scores[seat]}
+        {displayedScores(state)[seat]}
       </p>
     </section>
   );
@@ -252,9 +253,21 @@ function Lobby({
               : "랭킹은 서버를 연결하면 보여요."}
           </p>
         )}
-        <p className="mt-auto text-[24px] leading-snug text-ink-subtle">
-          랭킹에는 닉네임만 보여요. 로그인과 설문을 마친 기록만 올라가요.
-        </p>
+        <div className="mt-auto flex flex-col gap-5">
+          <div className="grid grid-cols-2 gap-6 rounded-tv-poster bg-surface-muted px-8 py-6">
+            {VENUES.map((item) => (
+              <div key={item}>
+                <p className="text-[26px] font-bold text-ink-muted">{VENUE_LABEL[item]} 누적</p>
+                <p className="mt-1 text-[48px] leading-none font-extrabold text-ink tabular-nums">
+                  {ranking.live ? ranking.venueTotal[item].toLocaleString("ko-KR") : "–"}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="text-[24px] leading-snug text-ink-subtle">
+            랭킹에는 닉네임만 보여요. 로그인과 설문을 마친 기록만 올라가요.
+          </p>
+        </div>
       </section>
     </div>
   );

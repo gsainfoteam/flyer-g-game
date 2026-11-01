@@ -297,6 +297,15 @@ export function advanceMatch(
   }
 }
 
+/**
+ * 화면에 보일 점수. 원반이 굴러가는 동안에는 던지기 전 점수를 보여 준다. 심판은 이미
+ * 결과를 알지만, 원반이 멈추기 전에 점수가 먼저 바뀌면 결과를 미리 알려 주는 셈이다.
+ */
+export function displayedScores(state: MatchState): Record<Seat, number> {
+  if (state.rollingUntil !== null && state.lastShot) return scorePucks(state.lastShot.before);
+  return state.scores;
+}
+
 /** 남은 초(올림). 지금 재는 마감이 없으면 null */
 export function secondsLeft(state: MatchState, now: number): number | null {
   const endsAt =

@@ -98,6 +98,7 @@ export function BoardView({
   const newest = lastShot ? `${lastShot.seat}${lastShot.turn}` : null;
 
   const span = to - from;
+  const pad = BOARD.puckRadius;
   const horizontal = orientation === "horizontal";
   // 보드 좌표(x: 폭, y: 길이) → 그림 좌표. 가로는 왼쪽에서 던지고, 세로는 아래에서 던진다.
   const place = (x: number, y: number) =>
@@ -122,7 +123,12 @@ export function BoardView({
     <svg
       role="img"
       aria-label="셔플보드 보드"
-      viewBox={horizontal ? `0 0 ${span} ${BOARD.width}` : `0 0 ${BOARD.width} ${span}`}
+      // 가장자리에 걸친 원반이 잘리지 않게 원반 반지름만큼 둘레를 둔다.
+      viewBox={
+        horizontal
+          ? `${-pad} ${-pad} ${span + pad * 2} ${BOARD.width + pad * 2}`
+          : `${-pad} ${-pad} ${BOARD.width + pad * 2} ${span + pad * 2}`
+      }
       preserveAspectRatio="xMidYMid meet"
       className={cn("block", className)}
     >
@@ -130,7 +136,8 @@ export function BoardView({
       {zones.map((zone, index) => {
         const rect = band(zone.minY, zone.maxY);
         if (!rect) return null;
-        const mid = place(BOARD.width / 2, (zone.minY + zone.maxY) / 2);
+        // 원반이 지나는 가운데를 피해 가장자리 쪽에 쓴다.
+        const mid = place(BOARD.width * 0.12, (zone.minY + zone.maxY) / 2);
         // 점수가 높을수록 밝다. 가장자리 10점이 가장 눈에 띈다.
         const opacity = [0.3, 0.2, 0.13, 0.07][index] ?? 0.07;
         return (
