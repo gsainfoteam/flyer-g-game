@@ -134,7 +134,7 @@ describe("차례", () => {
   it("정해진 횟수를 다 던지면 끝나고, 결과를 내고, 방을 비운다", () => {
     const next = ids();
     let state = started();
-    let now = SHUFFLEBOARD_RULES.startCountdownMs;
+    let now: number = SHUFFLEBOARD_RULES.startCountdownMs;
     for (let turn = 0; turn < TOTAL_TURNS; turn++) {
       const playerId = turn % 2 === 0 ? "p1" : "p2";
       // A는 10점 근처, B는 약하게 던져 파울

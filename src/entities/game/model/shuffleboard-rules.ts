@@ -29,7 +29,7 @@ export const SHUFFLEBOARD_RULES = {
    * "timeout": 기권 없이 자리를 지킨다. 같은 탭으로 돌아오면 이어 하고, 안 오면 그 사람
    * 턴만 제한 시간이 지나 0점으로 넘어간다. 정책이 정해지면 여기서 바꾼다.
    */
-  disconnectPolicy: "timeout" as "timeout",
+  disconnectPolicy: "timeout" as const,
   /** 원반끼리 부딪히는가. false면 서로 통과한다(명세 5장: MVP에서 생략 가능). */
   collisions: true,
 } as const;
