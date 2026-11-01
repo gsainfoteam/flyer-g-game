@@ -117,9 +117,14 @@ wss.on("connection", (socket, req) => {
 
 // --- 주소 안내 ------------------------------------------------------------
 server.listen(PORT, "0.0.0.0", () => {
-  const ips = Object.values(networkInterfaces())
-    .flat()
-    .filter((net) => net && net.family === "IPv4" && !net.internal)
+  // Windows에는 WSL·Hyper-V·VirtualBox 같은 가상 어댑터가 섞여 있다. 폰이 닿는 Wi-Fi 주소를
+  // 앞에 둔다.
+  const virtual = /vEthernet|WSL|Hyper-V|VirtualBox|VMware|Docker|Loopback|utun|bridge|docker/i;
+  const wifi = /Wi-?Fi|WLAN|wlan|wl|en0/i;
+  const ips = Object.entries(networkInterfaces())
+    .flatMap(([name, nets]) => (nets ?? []).map((net) => ({ name, ...net })))
+    .filter((net) => net.family === "IPv4" && !net.internal && !virtual.test(net.name))
+    .sort((a, b) => Number(wifi.test(b.name)) - Number(wifi.test(a.name)))
     .map((net) => net.address);
   const host = ips[0] ?? "localhost";
   console.log("\n셔플보드 폰 테스트 서버가 켜졌어요.\n");
