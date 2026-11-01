@@ -9,7 +9,7 @@ import {
 } from "@/entities/game/model/shuffleboard";
 import type { MatchState, Seat } from "@/entities/game/model/shuffleboard";
 import { SHUFFLEBOARD_RULES } from "@/entities/game/model/shuffleboard-rules";
-import type { RankingSnapshot } from "@/entities/ranking/api/ranking-source";
+import type { RankingSnapshot } from "@/entities/game/api/contract";
 import { QRCodeBox } from "@/shared/components/QRCodeBox";
 import { VENUES, VENUE_LABEL } from "@/shared/config/venue";
 import type { Venue } from "@/shared/config/venue";
@@ -61,7 +61,7 @@ interface ShuffleboardStageProps {
   joinUrls: Record<Seat, string | null>;
   /** QR을 띄울 수 없을 때 그 자리에 적을 말 */
   closedLabel: string;
-  ranking: RankingSnapshot & { live: boolean };
+  ranking: RankingSnapshot;
   /** 이 TV의 장소. 랭킹 그룹에서 이 장소를 강조한다. */
   venue: Venue | null;
   /** 맨 위 머리 줄. 화면마다 다르다. */
@@ -134,7 +134,7 @@ function VenueBest({
   ranking,
   venue,
 }: {
-  ranking: RankingSnapshot & { live: boolean };
+  ranking: RankingSnapshot;
   venue: Venue | null;
 }) {
   return (
@@ -198,7 +198,7 @@ function Lobby({
   state: MatchState;
   joinUrls: Record<Seat, string | null>;
   closedLabel: string;
-  ranking: RankingSnapshot & { live: boolean };
+  ranking: RankingSnapshot;
 }) {
   return (
     <div className="grid min-h-0 flex-1 grid-cols-[1fr_1fr_1.15fr] gap-8">
@@ -238,43 +238,37 @@ function Lobby({
       })}
 
       <section aria-label="랭킹" className="flex min-h-0 flex-col rounded-tv-card bg-surface px-10 py-10">
-        <h2 className="text-[44px] font-extrabold text-ink">개인 랭킹</h2>
+        <h2 className="text-[44px] font-extrabold text-ink">경기 랭킹</h2>
         {ranking.top.length > 0 ? (
-          <ol className="mt-8 flex flex-col gap-5">
+          <ol className="mt-8 flex flex-col gap-6">
             {ranking.top.slice(0, 3).map((entry, index) => (
-              <li key={`${entry.name}-${index}`} className="flex items-baseline gap-6">
-                <span className="w-12 text-[40px] font-extrabold text-ink-subtle tabular-nums">
+              <li key={entry.matchId} className="flex items-baseline gap-5">
+                <span className="w-10 shrink-0 text-[40px] font-extrabold text-ink-subtle tabular-nums">
                   {index + 1}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[40px] font-bold text-ink">
-                  {entry.name}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[40px] leading-tight font-bold text-ink">
+                    {entry.name}
+                  </span>
+                  {entry.venue && (
+                    <span className="text-[24px] text-ink-subtle">{VENUE_LABEL[entry.venue]}</span>
+                  )}
                 </span>
-                <span className="text-[48px] font-extrabold text-ink tabular-nums">{entry.score}</span>
+                <span className="text-[52px] leading-none font-extrabold text-ink tabular-nums">
+                  {entry.score}
+                </span>
               </li>
             ))}
           </ol>
         ) : (
           <p className="mt-8 text-[30px] leading-snug text-ink-muted">
-            {ranking.live
-              ? "아직 등록된 기록이 없어요. 첫 기록의 주인공이 되어 보세요."
-              : "랭킹은 서버를 연결하면 보여요."}
+            아직 랭킹에 오른 경기가 없어요. 이기고 설문까지 내면 첫 기록이 돼요.
           </p>
         )}
-        <div className="mt-auto flex flex-col gap-5">
-          <div className="grid grid-cols-2 gap-6 rounded-tv-poster bg-surface-muted px-8 py-6">
-            {VENUES.map((item) => (
-              <div key={item}>
-                <p className="text-[26px] font-bold text-ink-muted">{VENUE_LABEL[item]} 누적</p>
-                <p className="mt-1 text-[48px] leading-none font-extrabold text-ink tabular-nums">
-                  {ranking.live ? ranking.venueTotal[item].toLocaleString("ko-KR") : "–"}
-                </p>
-              </div>
-            ))}
-          </div>
-          <p className="text-[24px] leading-snug text-ink-subtle">
-            랭킹에는 닉네임만 보여요. 로그인과 설문을 마친 기록만 올라가요.
-          </p>
-        </div>
+        <p className="mt-auto text-[24px] leading-snug text-ink-subtle">
+          경기에서 더 높은 점수를 낸 사람이 폰에서 로그인하고 설문을 내면 그 점수가 올라가요. TV에는
+          닉네임만 보여요.
+        </p>
       </section>
     </div>
   );

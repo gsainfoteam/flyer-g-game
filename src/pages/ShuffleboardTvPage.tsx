@@ -6,6 +6,8 @@ import { useShuffleboardHost } from "@/features/shuffleboard/model/use-shufflebo
 import { joinUrlOf } from "@/features/shuffleboard/model/join-url";
 import { LinkBadge, ShuffleboardStageFor } from "@/features/shuffleboard/ui/stage-helpers";
 import { useRanking } from "@/entities/ranking/model/use-ranking";
+import { loadRanking, shuffleboardApi } from "@/features/shuffleboard/api";
+import { reportMatch } from "@/features/shuffleboard/model/report-match";
 import { Logo } from "@/shared/components/Logo";
 import { VENUE_LABEL, venueOfRoom } from "@/shared/config/venue";
 import {
@@ -29,10 +31,10 @@ export function ShuffleboardTvPage() {
   const { state, now, status: link } = useShuffleboardHost(roomId, {
     socketBase,
     token,
-    // 서버가 생기면 여기서 두 사람의 점수를 임시 저장(pending_auth)한다. (명세 7.1)
-    onMatchFinished: (result) => console.info("[shuffleboard] match finished", result),
+    // 두 사람의 점수를 서버에 임시 저장한다. 아직 랭킹은 아니다. (명세 7.1)
+    onMatchFinished: (result) => reportMatch(result, roomId, token),
   });
-  const ranking = useRanking();
+  const ranking = useRanking(loadRanking);
   const venue = venueOfRoom(roomId);
 
   return (
@@ -54,6 +56,9 @@ export function ShuffleboardTvPage() {
             <span className="ml-auto text-[26px] text-ink-subtle tabular-nums">
               {state.round}번째 경기
             </span>
+            {shuffleboardApi.demo && (
+              <span className="text-[22px] text-warning">데모 저장(이 브라우저)</span>
+            )}
             <LinkBadge local={socketBase === null} status={link} />
           </header>
         }

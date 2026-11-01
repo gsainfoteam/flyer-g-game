@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { StageHeader } from "@/entities/poster/ui/StageHeader";
 import { useRanking } from "@/entities/ranking/model/use-ranking";
+import { loadRanking } from "../api";
+import { reportMatch } from "../model/report-match";
 import { venueOfRoom } from "@/shared/config/venue";
 import { useShuffleboardHost } from "../model/use-shuffleboard-host";
 import { joinUrlOf } from "../model/join-url";
@@ -45,8 +47,9 @@ export function ShuffleboardWidget({
     socketBase,
     token,
     ...WIDGET_LIMITS,
+    onMatchFinished: (result) => reportMatch(result, roomId, token),
   });
-  const ranking = useRanking();
+  const ranking = useRanking(loadRanking);
 
   // 콜백은 렌더마다 새로 올 수 있다. effect가 되풀이되지 않게 ref로 든다.
   const callbacks = useRef({ onActiveChange, onSessionEnd });
