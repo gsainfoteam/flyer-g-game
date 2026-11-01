@@ -3,12 +3,10 @@ import {
   advanceMatch,
   applyClientMessage,
   initialMatch,
-  matchResult,
 } from "@/entities/game/model/shuffleboard";
 import type {
   MatchClientMessage,
   MatchHostMessage,
-  MatchResult,
   MatchState,
 } from "@/entities/game/model/shuffleboard";
 import { parseClientMessage } from "@/entities/game/model/shuffleboard-messages";
@@ -38,11 +36,6 @@ export interface UseShuffleboardHostOptions {
   lobbyWaitMs?: number;
   /** 누군가 들어온 뒤 이만큼 지나면 경기 중이 아닐 때 방을 비운다(위젯용). */
   sessionLimitMs?: number;
-  /**
-   * 경기가 끝나면 한 번 부른다. 서버가 생기면 여기서 두 사람의 점수를
-   * "임시 저장(pending_auth)"으로 보낸다. (명세 7.1)
-   */
-  onMatchFinished?: (result: MatchResult) => void;
   /** 테스트 주입용 */
   channel?: GameChannel<MatchClientMessage, MatchHostMessage>;
   now?: () => number;
@@ -98,16 +91,11 @@ export function useShuffleboardHost(roomId: string, options: UseShuffleboardHost
     token = null,
     lobbyWaitMs,
     sessionLimitMs,
-    onMatchFinished,
   } = options;
   const [status, setStatus] = useState<GameLinkStatus | null>(null);
   const [state, setState] = useState<MatchState>(() => restore(roomId));
   const stateRef = useRef<MatchState>(state);
   const [clock, setClock] = useState(() => now());
-  const finishedRef = useRef(onMatchFinished);
-  useEffect(() => {
-    finishedRef.current = onMatchFinished;
-  }, [onMatchFinished]);
 
   useEffect(() => {
     // 기기 토큰이 없으면 방을 열 수 없다. 설정 링크로 다시 열어야 한다.
@@ -135,8 +123,6 @@ export function useShuffleboardHost(roomId: string, options: UseShuffleboardHost
     let sentAt = 0;
     let activeSince: number | null = null;
     let waitingSince: number | null = null;
-    let reported: string | null =
-      stateRef.current.phase === "FINISHED" ? stateRef.current.matchId : null;
 
     const commit = (next: MatchState) => {
       if (next === stateRef.current) return;
@@ -184,12 +170,6 @@ export function useShuffleboardHost(roomId: string, options: UseShuffleboardHost
         waitingSince = null;
       }
       commit(next);
-
-      const result = matchResult(stateRef.current);
-      if (result && reported !== result.matchId) {
-        reported = result.matchId;
-        finishedRef.current?.(result);
-      }
 
       if (dirty) setState(stateRef.current);
       if (dirty || at - sentAt >= HEARTBEAT_MS) {

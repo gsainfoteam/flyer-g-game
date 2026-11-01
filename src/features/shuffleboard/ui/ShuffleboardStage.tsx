@@ -9,10 +9,7 @@ import {
 } from "@/entities/game/model/shuffleboard";
 import type { MatchState, Seat } from "@/entities/game/model/shuffleboard";
 import { SHUFFLEBOARD_RULES } from "@/entities/game/model/shuffleboard-rules";
-import type { RankingSnapshot } from "@/entities/game/api/contract";
 import { QRCodeBox } from "@/shared/components/QRCodeBox";
-import { VENUES, VENUE_LABEL } from "@/shared/config/venue";
-import type { Venue } from "@/shared/config/venue";
 import { cn } from "@/shared/lib/utils";
 import { BoardView } from "./BoardView";
 import { SEAT_DOT, SEAT_TEXT } from "./seat-style";
@@ -32,7 +29,7 @@ function statusOf(state: MatchState, seconds: number | null): { title: string; d
       const seated = SEATS.filter((seat) => state.seats[seat]);
       const empty = SEATS.find((seat) => !state.seats[seat]);
       return seated.length === 0
-        ? { title: "두 명이 모이면 시작해요", detail: "원하는 팀의 QR을 찍고 닉네임을 적어 주세요" }
+        ? { title: "두 명이 모이면 시작해요", detail: "원하는 팀의 QR을 찍으면 바로 참가해요" }
         : {
             title: "한 명 더 오면 시작해요",
             detail: `${seated[0]}팀이 기다리고 있어요. ${empty}팀 QR을 찍어 주세요`,
@@ -49,7 +46,7 @@ function statusOf(state: MatchState, seconds: number | null): { title: string; d
     case "FINISHED":
       return {
         title: state.winner === "DRAW" ? "무승부" : `${state.winner}팀 승리`,
-        detail: "폰에서 로그인하고 설문을 내면 랭킹에 올라가요",
+        detail: "오른쪽 위 QR로 전단지 설문에 참여해 주세요",
       };
   }
 }
@@ -61,9 +58,8 @@ interface ShuffleboardStageProps {
   joinUrls: Record<Seat, string | null>;
   /** QR을 띄울 수 없을 때 그 자리에 적을 말 */
   closedLabel: string;
-  ranking: RankingSnapshot;
-  /** 이 TV의 장소. 랭킹 그룹에서 이 장소를 강조한다. */
-  venue: Venue | null;
+  /** 설문(노션폼) 주소. 없으면 QR 자리에 설정 안내를 띄운다. */
+  surveyUrl: string | null;
   /** 맨 위 머리 줄. 화면마다 다르다. */
   header: ReactNode;
 }
@@ -73,8 +69,7 @@ export function ShuffleboardStage({
   now,
   joinUrls,
   closedLabel,
-  ranking,
-  venue,
+  surveyUrl,
   header,
 }: ShuffleboardStageProps) {
   const seconds = secondsLeft(state, now);
@@ -101,7 +96,7 @@ export function ShuffleboardStage({
           </h1>
           <p className="mt-4 text-[34px] text-ink-muted">{status.detail}</p>
         </div>
-        <RankingCorner ranking={ranking} venue={venue} />
+        <SurveyCorner surveyUrl={surveyUrl} />
       </div>
 
       {inMatch ? (
@@ -131,53 +126,32 @@ export function ShuffleboardStage({
 }
 
 /**
- * 오른쪽 위 랭킹 자리. 경기 랭킹 1~3위와 구관/신관 최고 점수를 작게 모아 둔다.
- * 화면의 주인공은 두 팀이라 랭킹은 이 자리를 넘지 않는다.
+ * 오른쪽 위 설문 자리. 노션폼 QR이 대기 중에도 경기 중에도 늘 떠 있다.
+ * 경기를 기다리는 사람, 구경하는 사람, 막 끝낸 사람 누구든 찍을 수 있다.
  */
-function RankingCorner({
-  ranking,
-  venue,
-}: {
-  ranking: RankingSnapshot;
-  venue: Venue | null;
-}) {
+function SurveyCorner({ surveyUrl }: { surveyUrl: string | null }) {
   return (
     <section
-      aria-label="랭킹"
-      className="flex shrink-0 gap-10 rounded-tv-card bg-surface px-9 py-5"
+      aria-label="전단지 설문"
+      className="flex shrink-0 items-center gap-7 rounded-tv-card bg-surface py-4 pr-9 pl-4"
     >
-      <div className="flex flex-col justify-center gap-2">
-        {VENUES.map((item) => (
-          <p key={item} className="flex items-baseline gap-4">
-            <span
-              className={cn(
-                "w-[118px] text-[24px] font-bold",
-                item === venue ? "text-ink" : "text-ink-subtle",
-              )}
-            >
-              {VENUE_LABEL[item]} 최고
-            </span>
-            <span className="text-[40px] leading-none font-extrabold text-ink tabular-nums">
-              {ranking.venueBest[item] ?? "–"}
-            </span>
-          </p>
-        ))}
+      {surveyUrl ? (
+        <QRCodeBox value={surveyUrl} size="lg" />
+      ) : (
+        <p className="grid size-[132px] place-items-center text-center text-[20px] leading-snug text-ink-subtle">
+          설문 주소
+          <br />
+          설정 필요
+        </p>
+      )}
+      <div>
+        <p className="text-[30px] leading-tight font-extrabold text-ink">전단지 설문</p>
+        <p className="mt-2 text-[24px] leading-snug text-ink-muted">
+          QR을 찍고 의견을
+          <br />
+          들려주세요
+        </p>
       </div>
-      <ol aria-label="경기 랭킹" className="flex w-[330px] flex-col justify-center gap-1">
-        {ranking.top.length > 0 ? (
-          ranking.top.slice(0, 3).map((entry, index) => (
-            <li key={entry.matchId} className="flex items-baseline gap-3 text-[24px]">
-              <span className="w-5 font-extrabold text-ink-subtle tabular-nums">{index + 1}</span>
-              <span className="min-w-0 flex-1 truncate font-bold text-ink">{entry.name}</span>
-              <span className="font-extrabold text-ink tabular-nums">{entry.score}</span>
-            </li>
-          ))
-        ) : (
-          <li className="text-[22px] leading-snug text-ink-subtle">
-            이기고 설문까지 내면 랭킹에 올라가요
-          </li>
-        )}
-      </ol>
     </section>
   );
 }
@@ -250,7 +224,7 @@ function Lobby({
                   {seated ? "준비 완료" : "빈 자리"}
                 </p>
                 <p className="mt-6 text-[28px] text-ink-muted">
-                  {seated ? "상대를 기다리고 있어요" : "QR을 찍고 닉네임을 적어 주세요"}
+                  {seated ? "상대를 기다리고 있어요" : "QR을 찍으면 바로 참가해요"}
                 </p>
               </div>
               <div className="flex w-[280px] shrink-0 flex-col items-center justify-end gap-4">
@@ -273,7 +247,7 @@ function Lobby({
       </div>
       <p className="shrink-0 text-[24px] text-ink-subtle">
         1:1 대결 · 번갈아 {SHUFFLEBOARD_RULES.shotsPerSeat}번씩 던져요 · 끝났을 때 보드에 남은 원반으로 점수를 매겨요 ·
-        이긴 사람이 로그인하고 설문을 내면 랭킹에 올라가요
+        로그인 없이 QR만 찍으면 바로 참가해요
       </p>
     </>
   );

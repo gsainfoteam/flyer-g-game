@@ -1,4 +1,4 @@
-import { SEATS, SHUFFLEBOARD_RULES } from "./shuffleboard-rules";
+import { SEATS } from "./shuffleboard-rules";
 import type { Seat } from "./shuffleboard-rules";
 import type { MatchClientMessage } from "./shuffleboard";
 
@@ -8,8 +8,6 @@ import type { MatchClientMessage } from "./shuffleboard";
  * 각도·힘의 범위는 물리 쪽(`clampShot`)이 다시 자른다.
  */
 const ID_MAX_LENGTH = 64;
-/** sha-256 hex */
-const CLAIM_HASH = /^[0-9a-f]{64}$/;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -31,21 +29,12 @@ export function parseClientMessage(raw: unknown): MatchClientMessage | null {
     case "hello":
     case "leave":
       return { kind: raw.kind, playerId };
-    case "join": {
-      if (typeof raw.name !== "string") return null;
-      const claimHash =
-        typeof raw.claimHash === "string" && CLAIM_HASH.test(raw.claimHash)
-          ? raw.claimHash
-          : null;
+    case "join":
       return {
         kind: "join",
         playerId,
-        // 엔진이 정리하기 전에 터무니없이 긴 값은 미리 자른다.
-        name: raw.name.slice(0, SHUFFLEBOARD_RULES.nameMaxLength * 4),
-        claimHash,
         seat: (SEATS as readonly unknown[]).includes(raw.seat) ? (raw.seat as Seat) : null,
       };
-    }
     case "shoot": {
       const turn = readNumber(raw.turn);
       const angle = readNumber(raw.angle);

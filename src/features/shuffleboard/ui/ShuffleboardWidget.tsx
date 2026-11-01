@@ -1,9 +1,6 @@
 import { useEffect, useRef } from "react";
 import { StageHeader } from "@/entities/poster/ui/StageHeader";
-import { useRanking } from "@/entities/ranking/model/use-ranking";
-import { loadRanking } from "../api";
-import { reportMatch } from "../model/report-match";
-import { venueOfRoom } from "@/shared/config/venue";
+import { surveyUrl } from "@/shared/config/survey";
 import { useShuffleboardHost } from "../model/use-shuffleboard-host";
 import { joinUrlOf } from "../model/join-url";
 import { ShuffleboardStageFor } from "./stage-helpers";
@@ -47,9 +44,7 @@ export function ShuffleboardWidget({
     socketBase,
     token,
     ...WIDGET_LIMITS,
-    onMatchFinished: (result) => reportMatch(result, roomId, token),
   });
-  const ranking = useRanking(loadRanking);
 
   // 콜백은 렌더마다 새로 올 수 있다. effect가 되풀이되지 않게 ref로 든다.
   const callbacks = useRef({ onActiveChange, onSessionEnd });
@@ -74,8 +69,7 @@ export function ShuffleboardWidget({
       link={status}
       local={socketBase === null}
       joinUrlOf={(seat) => joinUrlOf(roomId, seat)}
-      ranking={ranking}
-      venue={venueOfRoom(roomId)}
+      surveyUrl={surveyUrl()}
       header={
         <StageHeader deviceLabel={deviceLabel} serverTime={serverTime} clockTicking>
           <span className="text-[26px] font-extrabold text-ink-muted">셔플보드</span>

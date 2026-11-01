@@ -1,8 +1,6 @@
 /**
- * TV가 놓인 장소. 랭킹은 이 장소별로 합산한다(구관/신관).
- *
- * 경기 안의 두 사람(A팀/B팀)과는 다른 개념이다. 한 TV에서 붙은 두 사람의 기록은
- * 모두 그 TV의 장소로 집계한다.
+ * TV가 놓인 장소(구관/신관). 구관과 신관 TV는 각자 독립된 방이다.
+ * 경기 안의 두 사람(A팀/B팀)과는 다른 개념이다.
  */
 export const VENUES = ["old", "new"] as const;
 export type Venue = (typeof VENUES)[number];

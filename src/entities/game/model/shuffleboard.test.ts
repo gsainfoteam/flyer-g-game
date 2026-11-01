@@ -4,8 +4,6 @@ import {
   applyClientMessage,
   displayedScores,
   initialMatch,
-  matchResult,
-  normalizeName,
   seatOf,
   shooterSeat,
 } from "./shuffleboard";
@@ -24,7 +22,7 @@ function apply(state: MatchState, message: MatchClientMessage, now = 0) {
 }
 
 function join(state: MatchState, playerId: string, now = 0, seat: "A" | "B" | null = null) {
-  return apply(state, { kind: "join", playerId, name: playerId, claimHash: null, seat }, now);
+  return apply(state, { kind: "join", playerId, seat }, now);
 }
 
 /** 두 명을 앉히고 카운트다운을 지나 경기를 시작한 상태 */
@@ -97,11 +95,6 @@ describe("입장", () => {
     expect(apply(state, { kind: "leave", playerId: "p1" }).state).toBe(state);
   });
 
-  it("닉네임을 정리하고 부적절하면 팀 이름으로 부른다", () => {
-    expect(normalizeName("  하윤 ​ ", "A")).toBe("하윤");
-    expect(normalizeName("", "B")).toBe("B팀 참가자");
-    expect(normalizeName("가".repeat(30), "A")).toHaveLength(SHUFFLEBOARD_RULES.nameMaxLength);
-  });
 });
 
 describe("차례", () => {
@@ -169,10 +162,6 @@ describe("차례", () => {
     expect(state.winner).toBe("A");
     expect(state.shots).toHaveLength(TOTAL_TURNS);
 
-    const result = matchResult(state);
-    expect(result?.players.map((p) => p.seat)).toEqual(["A", "B"]);
-    expect(result?.players[0].score).toBe(state.scores.A);
-
     const reset = advanceMatch(state, state.phaseEndsAt!, next);
     expect(reset.phase).toBe("WAITING");
     expect(reset.matchId).toBe("match-1");
@@ -220,13 +209,12 @@ describe("메시지 읽기", () => {
     expect(parseClientMessage({ kind: "nope", playerId: "p" })).toBeNull();
   });
 
-  it("해시 모양이 아닌 claimHash는 버린다", () => {
-    expect(parseClientMessage({ kind: "join", playerId: "p", name: "a", claimHash: "secret" })).toEqual({
+  it("팀이 A·B가 아니면 빈 자리에 앉는 참가로 읽는다", () => {
+    expect(parseClientMessage({ kind: "join", playerId: "p", seat: "C" })).toEqual({
       kind: "join",
       playerId: "p",
-      name: "a",
-      claimHash: null,
       seat: null,
     });
+    expect(parseClientMessage({ kind: "join", playerId: "p", seat: "B" })).toMatchObject({ seat: "B" });
   });
 });

@@ -11,10 +11,9 @@ import { createBroadcastGameChannel } from "@/shared/lib/game-channel";
 import type { GameChannel } from "@/shared/lib/game-channel";
 import { createWsClientChannel } from "@/shared/lib/ws-game-channel";
 import type { GameLinkStatus } from "@/shared/lib/ws-game-channel";
-import { createClaim } from "../api/claim";
 
 /**
- * 폰 쪽 셔플보드. 로그인 없이 닉네임만 받아 참가한다.
+ * 폰 쪽 셔플보드. 로그인·닉네임 없이 TV의 팀별 QR로 바로 참가한다.
  *
  * 조준은 폰에서 바로 그리고, 손을 뗄 때 각도와 힘만 한 번 보낸다. 손가락 좌표를
  * 계속 보내지 않으므로 폰↔TV 지연(약 0.8~0.9초)이 조작감에 섞이지 않는다. (명세 6장)
@@ -45,23 +44,19 @@ function playerIdOf(roomId: string): string {
 
 /**
  * 끝난 경기의 내 결과. 방은 바로 다음 참가자를 받으므로 TV 상태에서 내가 빠져도
- * 이 폰에서는 결과·로그인·설문 화면을 이어 간다. (명세 4장, 7.6)
+ * 이 폰에서는 결과 화면(설문 안내 포함)을 이어 간다.
  */
 export interface FinishedMatch {
   roomId: string;
   matchId: string;
   seat: Seat;
-  name: string;
   myScore: number;
   opponentScore: number;
   result: "WIN" | "LOSE" | "DRAW";
-  /** 로그인 뒤 서버에 내어 기록 주인임을 증명한다. 화면에 띄우거나 TV로 보내지 않는다. */
-  claimSecret: string | null;
   finishedAt: number;
 }
 
 const finishedKey = (roomId: string) => `flyerg:shuffleboard-finished:${roomId}`;
-const claimKey = (roomId: string) => `flyerg:shuffleboard-claim:${roomId}`;
 
 function readStored<T>(key: string): T | null {
   try {
@@ -127,11 +122,9 @@ export function useShuffleboardPlayer(roomId: string, options: UseShuffleboardPl
             roomId,
             matchId: next.matchId,
             seat,
-            name: next.seats[seat]?.name ?? `${seat}팀 참가자`,
             myScore: next.scores[seat],
             opponentScore: next.scores[other],
             result: next.winner === "DRAW" ? "DRAW" : next.winner === seat ? "WIN" : "LOSE",
-            claimSecret: readStored<{ secret: string }>(claimKey(roomId))?.secret ?? null,
             finishedAt: Date.now(),
           };
           setFinished((current) => {
@@ -160,13 +153,11 @@ export function useShuffleboardPlayer(roomId: string, options: UseShuffleboardPl
   }, [roomId, injected, playerId, socketBase]);
 
   const join = useCallback(
-    async (name: string, seat: Seat | null) => {
+    (seat: Seat | null) => {
       setRejection(null);
-      const claim = await createClaim();
-      writeStored(claimKey(roomId), { secret: claim.secret });
-      channelRef.current?.send({ kind: "join", playerId, name, claimHash: claim.hash, seat });
+      channelRef.current?.send({ kind: "join", playerId, seat });
     },
-    [playerId, roomId],
+    [playerId],
   );
 
   const shoot = useCallback(
@@ -181,7 +172,6 @@ export function useShuffleboardPlayer(roomId: string, options: UseShuffleboardPl
   /** 결과 화면을 닫고 다음 경기에 참가할 수 있게 한다. */
   const dismissFinished = useCallback(() => {
     writeStored(finishedKey(roomId), null);
-    writeStored(claimKey(roomId), null);
     setFinished(null);
   }, [roomId]);
 
