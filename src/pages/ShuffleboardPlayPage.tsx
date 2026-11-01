@@ -51,7 +51,18 @@ export function ShuffleboardPlayPage() {
 
   // 끝난 경기의 결과가 있으면 방 상태와 상관없이 결과 화면을 이어 간다.
   if (player.finished) {
-    return <FinishView finished={player.finished} onNext={player.dismissFinished} />;
+    return (
+      <FinishView
+        finished={player.finished}
+        room={state}
+        now={now}
+        qrSeat={qrSeat}
+        onRejoin={(seat) => {
+          player.dismissFinished();
+          player.join(seat);
+        }}
+      />
+    );
   }
 
   if (!player.connected || !state) {
@@ -194,7 +205,20 @@ function Scoreboard({ state, mySeat }: { state: MatchState; mySeat: Seat }) {
  * 건너뛰면 "끝났어요"로 마무리한다. 다시 하고 싶은 사람만 쓰도록 작은 글씨로 길을 둔다.
  * 설문은 노션폼이다. TV 오른쪽 위 QR과 같은 주소라 여기서 바로 열 수 있다.
  */
-function FinishView({ finished, onNext }: { finished: FinishedMatch; onNext: () => void }) {
+function FinishView({
+  finished,
+  room,
+  now,
+  qrSeat,
+  onRejoin,
+}: {
+  finished: FinishedMatch;
+  /** 지금 TV 방 상태. 다시 참가할 수 있는지 보여 준다. */
+  room: MatchState | null;
+  now: number;
+  qrSeat: Seat | null;
+  onRejoin: (seat: Seat | null) => void;
+}) {
   const [ended, setEnded] = useState<"survey" | "skipped" | null>(null);
   const survey = surveyUrl();
 
@@ -205,13 +229,7 @@ function FinishView({ finished, onNext }: { finished: FinishedMatch; onNext: () 
           {ended === "survey" ? "설문에 참여해 줘서 고마워요" : "함께해 줘서 고마워요"}
         </h1>
         <p className="text-body text-ink-muted">게임이 끝났어요. 이 창은 닫아도 돼요.</p>
-        <button
-          type="button"
-          onClick={onNext}
-          className="mx-auto mt-6 text-label text-ink-subtle underline underline-offset-4"
-        >
-          한 판 더 하기
-        </button>
+        <Rejoin room={room} now={now} qrSeat={qrSeat} onRejoin={onRejoin} />
       </div>
     );
   }
@@ -265,6 +283,49 @@ function FinishView({ finished, onNext }: { finished: FinishedMatch; onNext: () 
         </Button>
       </div>
     </div>
+  );
+}
+
+/**
+ * 다시 참가하기. 전단지 클릭 배틀과 같은 규칙이다: 결과를 보여 준 뒤 방을 비우고, 같은
+ * 폰에서 참가 버튼을 다시 누르면 들어간다. 자동 재경기나 먼저 했던 사람의 우선권은 없다.
+ */
+function Rejoin({
+  room,
+  now,
+  qrSeat,
+  onRejoin,
+}: {
+  room: MatchState | null;
+  now: number;
+  qrSeat: Seat | null;
+  onRejoin: (seat: Seat | null) => void;
+}) {
+  if (!room) return null;
+  if (room.phase === "FINISHED") {
+    const seconds = secondsLeft(room, now) ?? 0;
+    return <p className="mt-8 text-label text-ink-subtle">{seconds}초 뒤 다음 경기를 모집해요</p>;
+  }
+  if (room.phase !== "WAITING") {
+    return (
+      <p className="mt-8 text-label text-ink-subtle">
+        지금은 다른 사람이 경기 중이에요. 끝나면 다시 참가할 수 있어요.
+      </p>
+    );
+  }
+  const seat = qrSeat ?? (room.seats.A ? "B" : "A");
+  if (room.seats[seat]) {
+    const other: Seat = seat === "A" ? "B" : "A";
+    return (
+      <p className="mt-8 text-label text-ink-subtle">
+        {seat}팀 자리에 누가 있어요. 다시 하려면 TV의 {other}팀 QR을 찍어 주세요.
+      </p>
+    );
+  }
+  return (
+    <Button variant="outline" size="lg" className="mt-8 h-14 text-subhead" onClick={() => onRejoin(qrSeat)}>
+      {seat}팀으로 다시 참가하기
+    </Button>
   );
 }
 

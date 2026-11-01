@@ -98,7 +98,8 @@ export function BoardView({
   const newest = lastShot ? `${lastShot.seat}${lastShot.turn}` : null;
 
   const span = to - from;
-  const pad = BOARD.puckRadius;
+  // 가장자리에 걸친 원반과 보드 테두리가 잘리지 않게 둘레를 둔다.
+  const pad = BOARD.puckRadius + 1;
   const horizontal = orientation === "horizontal";
   // 보드 좌표(x: 폭, y: 길이) → 그림 좌표. 가로는 왼쪽에서 던지고, 세로는 아래에서 던진다.
   const place = (x: number, y: number) =>
@@ -111,19 +112,33 @@ export function BoardView({
       ? { x: lo - from, y: 0, width: hi - lo, height: BOARD.width }
       : { x: 0, y: to - hi, width: BOARD.width, height: hi - lo };
   };
+  /** 보드를 가로지르는 선 (y 위치) */
+  const across = (y: number) => {
+    if (y < from || y > to) return null;
+    const a = place(0, y);
+    const b = place(BOARD.width, y);
+    return { x1: a.cx, y1: a.cy, x2: b.cx, y2: b.cy };
+  };
 
   const zones = BOARD.zones.map((zone, index) => ({
     ...zone,
     maxY: index === 0 ? BOARD.length : BOARD.zones[index - 1].minY,
   }));
   const surface = band(0, BOARD.length);
-  const foul = band(BOARD.foulLineY - 1, BOARD.foulLineY + 1);
+  const rail = band(-3, BOARD.length + 3);
+  const foul = across(BOARD.foulLineY);
+  const launch = place(BOARD.launch.x, BOARD.launch.y);
+  const zoneFill = (points: number) =>
+    points === 10
+      ? "var(--color-board-hot)"
+      : points === 7
+        ? "var(--color-board-zone-high)"
+        : "var(--color-board-zone)";
 
   return (
     <svg
       role="img"
       aria-label="셔플보드 보드"
-      // 가장자리에 걸친 원반이 잘리지 않게 원반 반지름만큼 둘레를 둔다.
       viewBox={
         horizontal
           ? `${-pad} ${-pad} ${span + pad * 2} ${BOARD.width + pad * 2}`
@@ -132,17 +147,27 @@ export function BoardView({
       preserveAspectRatio="xMidYMid meet"
       className={cn("block", className)}
     >
-      {surface && <rect {...surface} fill="var(--color-surface-muted)" />}
-      {zones.map((zone, index) => {
+      {/* 테두리(레일)와 판 */}
+      {rail && (
+        <rect
+          {...(horizontal
+            ? { ...rail, y: rail.y - 3, height: rail.height + 6 }
+            : { ...rail, x: rail.x - 3, width: rail.width + 6 })}
+          rx={3}
+          fill="var(--color-board-rail)"
+        />
+      )}
+      {surface && <rect {...surface} fill="var(--color-board-field)" />}
+
+      {/* 점수 구역: 흰 선으로 나누고, 끝의 10점 칸은 초록 */}
+      {zones.map((zone) => {
         const rect = band(zone.minY, zone.maxY);
         if (!rect) return null;
-        // 원반이 지나는 가운데를 피해 가장자리 쪽에 쓴다.
-        const mid = place(BOARD.width * 0.12, (zone.minY + zone.maxY) / 2);
-        // 점수가 높을수록 밝다. 가장자리 10점이 가장 눈에 띈다.
-        const opacity = [0.3, 0.2, 0.13, 0.07][index] ?? 0.07;
+        // 원반이 지나는 가운데를 피해 위쪽(세로 보드는 왼쪽)에 쓴다.
+        const mid = place(BOARD.width * 0.17, (zone.minY + zone.maxY) / 2);
         return (
           <g key={zone.points}>
-            <rect {...rect} fill="var(--color-ink)" fillOpacity={opacity} />
+            <rect {...rect} fill={zoneFill(zone.points)} />
             <text
               x={mid.cx}
               y={mid.cy}
@@ -150,28 +175,56 @@ export function BoardView({
               dominantBaseline="central"
               fontSize={labelSize}
               fontWeight={800}
-              fill="var(--color-ink)"
-              fillOpacity={0.55}
+              fill="var(--color-board-line)"
             >
               {zone.points}
             </text>
           </g>
         );
       })}
-      {foul && <rect {...foul} fill="var(--color-ink)" fillOpacity={0.18} />}
+      {[...zones.map((zone) => zone.minY), BOARD.length].map((y) => {
+        const line = across(y);
+        return line ? (
+          <line key={y} {...line} stroke="var(--color-board-line)" strokeWidth={0.9} />
+        ) : null;
+      })}
+
+      {/* 파울 선: 이 선을 못 넘고 멈춘 원반은 치운다 */}
+      {foul && (
+        <line
+          {...foul}
+          stroke="var(--color-board-line)"
+          strokeOpacity={0.55}
+          strokeWidth={0.9}
+          strokeDasharray="3 3"
+        />
+      )}
+      {/* 발사 자리 */}
+      {BOARD.launch.y >= from && BOARD.launch.y <= to && (
+        <circle
+          cx={launch.cx}
+          cy={launch.cy}
+          r={BOARD.puckRadius + 1.5}
+          fill="none"
+          stroke="var(--color-board-line)"
+          strokeOpacity={0.4}
+          strokeWidth={0.8}
+        />
+      )}
+
+      {/* 원반: 팀 색 판에 흰 테두리, 가운데 손잡이 */}
       {shown.map((puck) => {
         const seat = seatOf.get(puck.id) ?? "A";
         const { cx, cy } = place(puck.x, puck.y);
+        const r = BOARD.puckRadius;
         return (
-          <circle
-            key={puck.id}
-            cx={cx}
-            cy={cy}
-            r={BOARD.puckRadius}
-            fill={SEAT_FILL[seat]}
-            stroke="var(--color-canvas)"
-            strokeWidth={puck.id === newest ? 1.6 : 0.8}
-          />
+          <g key={puck.id}>
+            {puck.id === newest && (
+              <circle cx={cx} cy={cy} r={r + 2} fill="var(--color-board-line)" fillOpacity={0.28} />
+            )}
+            <circle cx={cx} cy={cy} r={r} fill={SEAT_FILL[seat]} stroke="var(--color-board-line)" strokeWidth={1.1} />
+            <circle cx={cx} cy={cy} r={r * 0.45} fill="var(--color-board-line)" fillOpacity={0.3} />
+          </g>
         );
       })}
     </svg>
