@@ -128,12 +128,14 @@ export function BoardView({
   const rail = band(-3, BOARD.length + 3);
   const foul = across(BOARD.foulLineY);
   const launch = place(BOARD.launch.x, BOARD.launch.y);
-  const zoneFill = (points: number) =>
-    points === 10
-      ? "var(--color-board-hot)"
-      : points === 7
-        ? "var(--color-board-zone-high)"
-        : "var(--color-board-zone)";
+  // 토큰 이름을 문자열로 다 적어 둔다. Tailwind는 코드에 그대로 적힌 토큰만 CSS에 넣는다.
+  const ZONE_FILL: Record<number, string> = {
+    2: "var(--color-board-zone-2)",
+    3: "var(--color-board-zone-3)",
+    7: "var(--color-board-zone-7)",
+    10: "var(--color-board-hot)",
+  };
+  const zoneFill = (points: number) => ZONE_FILL[points] ?? "var(--color-board-zone-2)";
 
   return (
     <svg
@@ -176,6 +178,7 @@ export function BoardView({
               fontSize={labelSize}
               fontWeight={800}
               fill="var(--color-board-line)"
+              fillOpacity={0.75}
             >
               {zone.points}
             </text>
@@ -185,7 +188,7 @@ export function BoardView({
       {[...zones.map((zone) => zone.minY), BOARD.length].map((y) => {
         const line = across(y);
         return line ? (
-          <line key={y} {...line} stroke="var(--color-board-line)" strokeWidth={0.9} />
+          <line key={y} {...line} stroke="var(--color-board-line)" strokeOpacity={0.45} strokeWidth={0.8} />
         ) : null;
       })}
 
@@ -194,8 +197,8 @@ export function BoardView({
         <line
           {...foul}
           stroke="var(--color-board-line)"
-          strokeOpacity={0.55}
-          strokeWidth={0.9}
+          strokeOpacity={0.3}
+          strokeWidth={0.8}
           strokeDasharray="3 3"
         />
       )}

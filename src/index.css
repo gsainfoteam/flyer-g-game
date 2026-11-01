@@ -139,13 +139,16 @@
 
   /* --- 셔플보드 보드 -----------------------------------------------------
      게임 보드 그림 전용. TV(어두운 화면)와 폰(밝은 화면)에서 같은 보드로 보이도록
-     .tv-surface가 바꾸지 않는다. 파란 판, 흰 선, 최고점 초록 칸(GamePigeon 참고).
-     B팀 원반(info)이 판 위에서 묻히지 않게 판은 그보다 어두운 남색이다. */
-  --color-board-rail: #0e1b3a;
-  --color-board-field: #1c3779;
-  --color-board-zone: #24479a;
-  --color-board-zone-high: #2d58b6;
-  --color-board-hot: #36a457;
+     .tv-surface가 바꾸지 않는다.
+     점수가 없는 구간은 차분한 회색으로 두고, 점수 칸만 채도 낮은 파랑으로 칠해
+     10점 쪽으로 갈수록 조금씩 진해진다. 끝의 10점 칸은 초록(GamePigeon 참고).
+     원반(팀 색)이 가장 눈에 띄도록 판은 모두 한 톤 낮춘다. */
+  --color-board-rail: #1d2129;
+  --color-board-field: #2c3039;
+  --color-board-zone-2: #313b4d;
+  --color-board-zone-3: #36445c;
+  --color-board-zone-7: #3c4f6d;
+  --color-board-hot: #3c7352;
   --color-board-line: #ffffff;
 
   /* --- 모서리 -----------------------------------------------------------
