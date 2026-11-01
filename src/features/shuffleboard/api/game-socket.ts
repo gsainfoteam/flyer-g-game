@@ -7,5 +7,12 @@
  */
 export function gameSocketBase(): string | null {
   const url = import.meta.env.VITE_GAME_SOCKET_URL as string | undefined;
-  return url ? url : null;
+  if (!url) return null;
+  // 폰 테스트 서버(`bun run play:lan`)처럼 앱과 중계가 같은 주소에 있을 때
+  if (url === "same-origin") {
+    const origin = new URL("/games/ws", window.location.href);
+    origin.protocol = origin.protocol === "https:" ? "wss:" : "ws:";
+    return origin.toString();
+  }
+  return url;
 }
