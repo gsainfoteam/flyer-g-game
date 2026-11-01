@@ -29,10 +29,14 @@ import { SEAT_DOT, SEAT_TEXT } from "./seat-style";
 function statusOf(state: MatchState, seconds: number | null): { title: string; detail: string } {
   switch (state.phase) {
     case "WAITING": {
-      const seated = SEATS.filter((seat) => state.seats[seat]).length;
-      return seated === 0
-        ? { title: "두 명이 모이면 시작해요", detail: "QR을 찍고 닉네임을 적어 주세요" }
-        : { title: "한 명 더 오면 시작해요", detail: "A팀이 기다리고 있어요" };
+      const seated = SEATS.filter((seat) => state.seats[seat]);
+      const empty = SEATS.find((seat) => !state.seats[seat]);
+      return seated.length === 0
+        ? { title: "두 명이 모이면 시작해요", detail: "원하는 팀의 QR을 찍고 닉네임을 적어 주세요" }
+        : {
+            title: "한 명 더 오면 시작해요",
+            detail: `${seated[0]}팀이 기다리고 있어요. ${empty}팀 QR을 찍어 주세요`,
+          };
     }
     case "READY":
       return { title: `${seconds ?? 0}초 뒤 시작`, detail: "A팀이 먼저 던져요" };
@@ -53,8 +57,8 @@ function statusOf(state: MatchState, seconds: number | null): { title: string; d
 interface ShuffleboardStageProps {
   state: MatchState;
   now: number;
-  /** QR에 넣을 폰 참가 주소. 연결 준비 전이면 null */
-  joinUrl: string | null;
+  /** 팀별 QR에 넣을 폰 참가 주소. 연결 준비 전이거나 그 자리가 찼으면 null */
+  joinUrls: Record<Seat, string | null>;
   /** QR을 띄울 수 없을 때 그 자리에 적을 말 */
   closedLabel: string;
   ranking: RankingSnapshot & { live: boolean };
@@ -67,7 +71,7 @@ interface ShuffleboardStageProps {
 export function ShuffleboardStage({
   state,
   now,
-  joinUrl,
+  joinUrls,
   closedLabel,
   ranking,
   venue,
@@ -120,7 +124,7 @@ export function ShuffleboardStage({
           </div>
         </>
       ) : (
-        <Lobby state={state} joinUrl={joinUrl} closedLabel={closedLabel} ranking={ranking} />
+        <Lobby state={state} joinUrls={joinUrls} closedLabel={closedLabel} ranking={ranking} />
       )}
     </div>
   );
@@ -187,50 +191,53 @@ function SeatPanel({ seat, state }: { seat: Seat; state: MatchState }) {
 
 function Lobby({
   state,
-  joinUrl,
+  joinUrls,
   closedLabel,
   ranking,
 }: {
   state: MatchState;
-  joinUrl: string | null;
+  joinUrls: Record<Seat, string | null>;
   closedLabel: string;
   ranking: RankingSnapshot & { live: boolean };
 }) {
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-[1fr_1fr] gap-8">
-      <section className="flex items-center gap-14 rounded-tv-card bg-surface px-14 py-12">
-        <div className="flex w-[300px] shrink-0 flex-col items-center gap-5">
-          {joinUrl ? (
-            <QRCodeBox value={joinUrl} size="tv" />
-          ) : (
-            <p className="grid size-[240px] place-items-center text-center text-[26px] leading-snug whitespace-pre-line text-ink-subtle">
-              {closedLabel}
-            </p>
-          )}
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-6">
-          <h2 className="text-[44px] leading-tight font-extrabold text-ink">찍고 참가하기</h2>
-          {SEATS.map((seat) => (
-            <div key={seat} className="flex items-center gap-5">
-              <span
-                className={cn(
-                  "size-7 shrink-0 rounded-pill",
-                  state.seats[seat] ? SEAT_DOT[seat] : "bg-surface-muted",
-                )}
-              />
-              <p className="text-[34px] text-ink">
-                <span className={cn("font-extrabold", SEAT_TEXT[seat])}>{seat}팀</span>{" "}
-                {state.seats[seat] ? "준비됐어요" : "빈 자리"}
-              </p>
+    <div className="grid min-h-0 flex-1 grid-cols-[1fr_1fr_1.15fr] gap-8">
+      {SEATS.map((seat) => {
+        const seated = state.seats[seat] !== null;
+        const url = joinUrls[seat];
+        return (
+          <section
+            key={seat}
+            aria-label={`${seat}팀 참가`}
+            className={cn(
+              "flex flex-col items-center gap-6 rounded-tv-card px-10 py-10",
+              seated ? "bg-surface-muted" : "bg-surface",
+            )}
+          >
+            <h2 className={cn("self-start text-[56px] leading-none font-extrabold", SEAT_TEXT[seat])}>
+              {seat}팀
+            </h2>
+            <div className="grid flex-1 place-items-center">
+              {seated ? (
+                <p className="text-center text-[40px] leading-tight font-extrabold text-ink">
+                  준비됐어요
+                </p>
+              ) : url ? (
+                <QRCodeBox value={url} size="tv" />
+              ) : (
+                <p className="text-center text-[26px] leading-snug whitespace-pre-line text-ink-subtle">
+                  {closedLabel}
+                </p>
+              )}
             </div>
-          ))}
-          <p className="text-[26px] leading-snug text-ink-subtle">
-            번갈아 {SHUFFLEBOARD_RULES.shotsPerSeat}번씩 던져요. 끝났을 때 보드에 남은 원반으로 점수를 매겨요.
-          </p>
-        </div>
-      </section>
+            <p className={cn("text-[32px] font-extrabold", seated ? "text-ink-subtle" : SEAT_TEXT[seat])}>
+              {seated ? "상대를 기다리는 중" : `${seat}팀으로 참가`}
+            </p>
+          </section>
+        );
+      })}
 
-      <section aria-label="랭킹" className="flex min-h-0 flex-col rounded-tv-card bg-surface px-14 py-12">
+      <section aria-label="랭킹" className="flex min-h-0 flex-col rounded-tv-card bg-surface px-10 py-10">
         <h2 className="text-[44px] font-extrabold text-ink">개인 랭킹</h2>
         {ranking.top.length > 0 ? (
           <ol className="mt-8 flex flex-col gap-5">

@@ -1,4 +1,6 @@
 import type { ComponentProps } from "react";
+import { SEATS } from "@/entities/game/model/shuffleboard";
+import type { Seat } from "@/entities/game/model/shuffleboard";
 import { cn } from "@/shared/lib/utils";
 import type { GameLinkStatus } from "@/shared/lib/ws-game-channel";
 import { ShuffleboardStage } from "./ShuffleboardStage";
@@ -12,19 +14,24 @@ type StageProps = ComponentProps<typeof ShuffleboardStage>;
 export function ShuffleboardStageFor({
   link,
   local,
-  joinUrl,
+  joinUrlOf,
   ...rest
-}: Omit<StageProps, "joinUrl" | "closedLabel"> & {
+}: Omit<StageProps, "joinUrls" | "closedLabel"> & {
   link: GameLinkStatus | null;
   local: boolean;
-  joinUrl: string;
+  /** 팀별 QR 주소를 만든다 */
+  joinUrlOf: (seat: Seat) => string;
 }) {
   const ready = local || link === "open";
   const joinable = rest.state.phase === "WAITING";
   return (
     <ShuffleboardStage
       {...rest}
-      joinUrl={ready && joinable ? joinUrl : null}
+      joinUrls={
+        Object.fromEntries(
+          SEATS.map((seat) => [seat, ready && joinable ? joinUrlOf(seat) : null]),
+        ) as Record<Seat, string | null>
+      }
       closedLabel={
         !joinable
           ? "두 명이 모였어요\n곧 시작해요"

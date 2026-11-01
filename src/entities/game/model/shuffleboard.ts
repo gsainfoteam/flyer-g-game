@@ -7,6 +7,8 @@ import type { Seat } from "./shuffleboard-rules";
 /**
  * 셔플보드 1:1 경기. A팀(먼저 온 사람)과 B팀(두 번째)이 번갈아 원반을 던진다.
  *
+ * TV마다 QR이 팀별로 두 개(A팀 QR, B팀 QR)다. 찍은 QR의 팀 자리에 앉는다.
+ *
  * TV가 심판이다(클릭 배틀과 같다). 폰은 "각도와 힘"만 보내고, 차례 확인·물리·점수·
  * 시간은 모두 TV가 한다. 폰이 보낸 점수는 받지 않는다. (명세 6장)
  *
@@ -75,13 +77,21 @@ export interface MatchState {
 
 /** 폰 → TV */
 export type MatchClientMessage =
-  | { kind: "join"; playerId: string; name: string; claimHash: string | null }
+  | {
+      kind: "join";
+      playerId: string;
+      name: string;
+      claimHash: string | null;
+      /** 찍은 QR의 팀. 없으면 빈 자리 아무 데나(A 먼저) 앉는다. */
+      seat: Seat | null;
+    }
   | { kind: "shoot"; playerId: string; turn: number; angle: number; power: number }
   | { kind: "leave"; playerId: string }
   /** 막 연결한 폰이 지금 상태를 달라고 한다. */
   | { kind: "hello"; playerId: string };
 
-export type JoinRejection = "FULL" | "PLAYING";
+/** FULL: 두 자리가 다 찼다. TAKEN: 고른 팀 자리에 이미 누가 있다. PLAYING: 경기 중이다. */
+export type JoinRejection = "FULL" | "TAKEN" | "PLAYING";
 
 /** TV → 폰 */
 export type MatchHostMessage =
@@ -158,14 +168,21 @@ export function applyClientMessage(
           reply: { kind: "rejected", playerId: message.playerId, reason: "PLAYING" },
         };
       }
-      // 먼저 온 사람이 A, 다음 사람이 B. 셋째는 받지 않는다. (명세 3장)
-      const seat = SEATS.find((candidate) => state.seats[candidate] === null);
-      if (!seat) {
+      // 찍은 QR의 팀 자리에 앉는다. 팀이 없으면 빈 자리(A 먼저). 셋째는 받지 않는다.
+      const free = SEATS.filter((candidate) => state.seats[candidate] === null);
+      if (free.length === 0) {
         return {
           state,
           reply: { kind: "rejected", playerId: message.playerId, reason: "FULL" },
         };
       }
+      if (message.seat && state.seats[message.seat] !== null) {
+        return {
+          state,
+          reply: { kind: "rejected", playerId: message.playerId, reason: "TAKEN" },
+        };
+      }
+      const seat = message.seat ?? free[0];
       const seats = {
         ...state.seats,
         [seat]: {

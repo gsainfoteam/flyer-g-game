@@ -70,7 +70,7 @@ export function ShuffleboardWidget({
       now={now}
       link={status}
       local={socketBase === null}
-      joinUrl={joinUrlOf(roomId)}
+      joinUrlOf={(seat) => joinUrlOf(roomId, seat)}
       ranking={ranking}
       venue={venueOfRoom(roomId)}
       header={

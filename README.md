@@ -37,7 +37,7 @@ bun run build
 
 | 항목 | 값 |
 | --- | --- |
-| 입장 | TV마다 QR 하나. 먼저 온 사람이 A팀, 다음 사람이 B팀. 셋째는 거절 |
+| 입장 | TV마다 팀별 QR 두 개(A팀 QR, B팀 QR). 찍은 QR의 팀 자리에 앉음. 이미 찬 팀 QR을 찍으면 다른 팀 QR을 안내 |
 | 시작 | 두 명이 모이면 3초 뒤 |
 | 차례 | A팀부터 번갈아, 각 5번 |
 | 턴 제한 | 10초. 넘기면 원반 없이 0점으로 넘어감 |
@@ -58,7 +58,7 @@ bun run build
 | `src/entities/ranking/` | 그대로 복사 (서버가 생기면 실제 랭킹 소스를 여기에 추가) |
 | `src/features/shuffleboard/` | 그대로 복사. 단 `api/game-socket.ts`는 빼고 클릭 배틀의 `gameSocketBase()`를 쓰도록 import만 바꾸기. `model/player-binding.ts`는 클릭 배틀 것과 같은 파일이라 `shared`로 옮겨 함께 써도 됨 |
 | `src/pages/Shuffleboard*.tsx` | 그대로 복사 |
-| `src/shared/config/routes.ts`의 셔플보드 두 줄 | 전단지 `routes.ts`의 `paths`·`to`에 추가 |
+| `src/shared/config/routes.ts`의 셔플보드 두 줄 (폰 주소는 클릭 배틀처럼 `?team=A`) | 전단지 `routes.ts`의 `paths`·`to`에 추가 |
 | `src/shared/config/venue.ts` | 복사 후 `venueOfRoom()`만 "기기 설정의 장소(구관/신관)"를 읽도록 변경 |
 
 그다음 TV 위젯 순환에 넣습니다. `ShuffleboardWidget`은 `BattleWidget`과 **props가 똑같습니다.**

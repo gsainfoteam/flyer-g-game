@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import {
   SEATS,
   displayedScores,
@@ -41,6 +41,10 @@ function useNow(intervalMs = 250) {
 
 export function ShuffleboardPlayPage() {
   const { roomId = "old" } = useParams();
+  const [searchParams] = useSearchParams();
+  // TV의 팀별 QR이 정한 팀. QR 없이 들어오면 빈 자리에 앉는다.
+  const team = searchParams.get("team");
+  const qrSeat: Seat | null = team === "A" || team === "B" ? team : null;
   const player = useShuffleboardPlayer(roomId, { socketBase: gameSocketBase() });
   const [name, setName] = useState("");
   const [joining, setJoining] = useState(false);
@@ -78,14 +82,15 @@ export function ShuffleboardPlayPage() {
         />
       );
     }
-    const nextSeat: Seat = state.seats.A ? "B" : "A";
+    const nextSeat: Seat = qrSeat ?? (state.seats.A ? "B" : "A");
+    const otherSeat: Seat = nextSeat === "A" ? "B" : "A";
     return (
       <form
         className="flex flex-1 flex-col gap-6 pt-4"
         onSubmit={async (event) => {
           event.preventDefault();
           setJoining(true);
-          await player.join(name);
+          await player.join(name, qrSeat);
           setJoining(false);
         }}
       >
@@ -120,7 +125,9 @@ export function ShuffleboardPlayPage() {
           <p role="alert" className="text-label text-danger">
             {player.rejection === "FULL"
               ? "방금 두 자리가 다 찼어요. 이 경기가 끝나면 다시 참가해 주세요."
-              : "방금 경기가 시작됐어요. 다음 경기를 기다려 주세요."}
+              : player.rejection === "TAKEN"
+                ? `${nextSeat}팀 자리에 이미 누가 있어요. TV의 ${otherSeat}팀 QR을 찍어 주세요.`
+                : "방금 경기가 시작됐어요. 다음 경기를 기다려 주세요."}
           </p>
         )}
         <Button type="submit" size="lg" disabled={joining} className="mt-auto h-14 text-subhead">

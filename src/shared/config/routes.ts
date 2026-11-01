@@ -14,6 +14,7 @@ export const paths = {
 export const to = {
   home: () => "/",
   shuffleboard: (roomId: string) => `/games/shuffleboard/${encodeURIComponent(roomId)}`,
-  playShuffleboard: (roomId: string) =>
-    `/play/shuffleboard/${encodeURIComponent(roomId)}`,
+  /** `seat`은 TV의 팀별 QR이 정한다(A팀 QR, B팀 QR). */
+  playShuffleboard: (roomId: string, seat?: "A" | "B") =>
+    `/play/shuffleboard/${encodeURIComponent(roomId)}${seat ? `?team=${seat}` : ""}`,
 };

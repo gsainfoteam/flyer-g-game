@@ -23,8 +23,8 @@ function apply(state: MatchState, message: MatchClientMessage, now = 0) {
   return applyClientMessage(state, message, now);
 }
 
-function join(state: MatchState, playerId: string, now = 0) {
-  return apply(state, { kind: "join", playerId, name: playerId, claimHash: null }, now);
+function join(state: MatchState, playerId: string, now = 0, seat: "A" | "B" | null = null) {
+  return apply(state, { kind: "join", playerId, name: playerId, claimHash: null, seat }, now);
 }
 
 /** 두 명을 앉히고 카운트다운을 지나 경기를 시작한 상태 */
@@ -54,6 +54,17 @@ describe("입장", () => {
     const playing = advanceMatch(state, 200 + SHUFFLEBOARD_RULES.startCountdownMs, ids());
     expect(playing.phase).toBe("PLAYING");
     expect(shooterSeat(playing)).toBe("A");
+  });
+
+  it("찍은 QR의 팀 자리에 앉는다", () => {
+    let state = join(initialMatch(1, "m1"), "p1", 0, "B").state;
+    expect(state.seats.B?.playerId).toBe("p1");
+    expect(state.seats.A).toBeNull();
+    const taken = join(state, "p2", 0, "B");
+    expect(taken.state).toBe(state);
+    expect(taken.reply).toEqual({ kind: "rejected", playerId: "p2", reason: "TAKEN" });
+    state = join(state, "p2", 0, "A").state;
+    expect(state.phase).toBe("READY");
   });
 
   it("세 번째 사람은 받지 않는다", () => {
@@ -215,6 +226,7 @@ describe("메시지 읽기", () => {
       playerId: "p",
       name: "a",
       claimHash: null,
+      seat: null,
     });
   });
 });

@@ -160,11 +160,11 @@ export function useShuffleboardPlayer(roomId: string, options: UseShuffleboardPl
   }, [roomId, injected, playerId, socketBase]);
 
   const join = useCallback(
-    async (name: string) => {
+    async (name: string, seat: Seat | null) => {
       setRejection(null);
       const claim = await createClaim();
       writeStored(claimKey(roomId), { secret: claim.secret });
-      channelRef.current?.send({ kind: "join", playerId, name, claimHash: claim.hash });
+      channelRef.current?.send({ kind: "join", playerId, name, claimHash: claim.hash, seat });
     },
     [playerId, roomId],
   );

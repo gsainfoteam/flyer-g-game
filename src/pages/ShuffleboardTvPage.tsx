@@ -42,7 +42,7 @@ export function ShuffleboardTvPage() {
         now={now}
         link={link}
         local={socketBase === null}
-        joinUrl={joinUrlOf(roomId)}
+        joinUrlOf={(seat) => joinUrlOf(roomId, seat)}
         ranking={ranking}
         venue={venue}
         header={

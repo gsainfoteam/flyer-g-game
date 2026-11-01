@@ -1,4 +1,5 @@
-import { SHUFFLEBOARD_RULES } from "./shuffleboard-rules";
+import { SEATS, SHUFFLEBOARD_RULES } from "./shuffleboard-rules";
+import type { Seat } from "./shuffleboard-rules";
 import type { MatchClientMessage } from "./shuffleboard";
 
 /**
@@ -42,6 +43,7 @@ export function parseClientMessage(raw: unknown): MatchClientMessage | null {
         // 엔진이 정리하기 전에 터무니없이 긴 값은 미리 자른다.
         name: raw.name.slice(0, SHUFFLEBOARD_RULES.nameMaxLength * 4),
         claimHash,
+        seat: (SEATS as readonly unknown[]).includes(raw.seat) ? (raw.seat as Seat) : null,
       };
     }
     case "shoot": {

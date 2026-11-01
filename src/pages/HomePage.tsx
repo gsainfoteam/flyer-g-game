@@ -15,7 +15,7 @@ export function HomePage() {
         <h1 className="text-title text-ink">전단지 셔플보드 대항전</h1>
         <p className="mt-2 text-body text-ink-muted">
           TV 화면을 하나 열고, 폰 화면을 탭 두 개로 열면 한 경기를 해 볼 수 있어요.
-          먼저 연 폰이 A팀이에요.
+          TV에는 팀별 QR이 하나씩 있어요.
         </p>
       </div>
       {VENUES.map((venue) => (
@@ -24,8 +24,11 @@ export function HomePage() {
           <Link className="text-subhead text-accent underline-offset-4 hover:underline" to={to.shuffleboard(venue)}>
             TV 화면 열기
           </Link>
-          <Link className="text-subhead text-accent underline-offset-4 hover:underline" to={to.playShuffleboard(venue)}>
-            폰 참가 화면 열기
+          <Link className="text-subhead text-accent underline-offset-4 hover:underline" to={to.playShuffleboard(venue, "A")}>
+            폰 참가 화면 열기 (A팀 QR)
+          </Link>
+          <Link className="text-subhead text-info underline-offset-4 hover:underline" to={to.playShuffleboard(venue, "B")}>
+            폰 참가 화면 열기 (B팀 QR)
           </Link>
         </section>
       ))}
