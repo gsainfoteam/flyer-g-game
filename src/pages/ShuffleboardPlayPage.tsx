@@ -157,7 +157,7 @@ export function ShuffleboardPlayPage() {
             ? "원반이 굴러가는 중이에요"
             : `${seatOfTurn(state.turn)}팀 차례예요`}
       </p>
-      <div className="rounded-card bg-surface p-3">
+      <div className="board-light rounded-card bg-surface p-3">
         <BoardView
           orientation="vertical"
           pucks={state.pucks}

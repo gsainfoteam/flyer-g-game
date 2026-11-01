@@ -177,7 +177,7 @@ export function BoardView({
               dominantBaseline="central"
               fontSize={labelSize}
               fontWeight={800}
-              fill="var(--color-board-line)"
+              fill="var(--color-board-label)"
               fillOpacity={0.9}
             >
               {zone.points}
@@ -196,7 +196,7 @@ export function BoardView({
       {foul && (
         <line
           {...foul}
-          stroke="var(--color-board-line)"
+          stroke="var(--color-board-label)"
           strokeOpacity={0.45}
           strokeWidth={0.8}
           strokeDasharray="3 3"
@@ -209,7 +209,7 @@ export function BoardView({
           cy={launch.cy}
           r={BOARD.puckRadius + 1.5}
           fill="none"
-          stroke="var(--color-board-line)"
+          stroke="var(--color-board-label)"
           strokeOpacity={0.4}
           strokeWidth={0.8}
         />
