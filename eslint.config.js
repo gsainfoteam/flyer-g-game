@@ -40,7 +40,8 @@ const otherFeatures = (name) => ({
 })
 
 export default defineConfig([
-  globalIgnores(['dist', 'src/shared/api/generated']),
+  // server/는 전단지 백엔드(flyer-g-be)에 넣을 코드라 그쪽 lint(oxlint)·prettier 규칙을 따른다.
+  globalIgnores(['dist', 'src/shared/api/generated', 'server']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

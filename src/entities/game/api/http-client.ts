@@ -47,7 +47,8 @@ export function createHttpShuffleboardApi(
   return {
     demo: false,
     reportMatch: (report: MatchReport, deviceToken: string | null) =>
-      call("/shuffleboard/matches", {
+      // 전단지에서 방 id는 기기 id다. 경로의 기기와 기기 토큰이 같아야 한다.
+      call(`/shuffleboard/devices/${encodeURIComponent(report.roomId)}/matches`, {
         method: "POST",
         headers: deviceToken ? { "X-Device-Token": deviceToken } : {},
         body: JSON.stringify(report),

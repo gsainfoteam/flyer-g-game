@@ -325,7 +325,9 @@ function DoneView({
             ? claim.ranked
               ? `이 경기 ${claim.topScore}점이 랭킹 기록에 올라갔어요.${myEntryIndex >= 0 ? ` 지금 ${myEntryIndex + 1}위예요.` : " 3위 안에 들면 TV에 보여요."}`
               : "랭킹 반영을 확인하고 있어요."
-            : `이 경기 랭킹 기록은 더 높은 점수(${claim.topScore}점)예요. 그 사람이 로그인과 설문을 마치면 올라가요.`}
+            : claim.ranked
+              ? `설문 고마워요! 이 경기는 상대의 ${claim.topScore}점으로 랭킹에 올라가 있어요. 다음 경기에서 이기면 내 점수가 올라가요.`
+              : `설문 고마워요! 이 경기 랭킹 기록은 더 높은 점수(${claim.topScore}점)예요. 상대가 로그인과 설문을 마치면 올라가요.`}
         </p>
       </div>
       {ranking && ranking.top.length > 0 && (
