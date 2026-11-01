@@ -72,22 +72,48 @@ bun run play:lan
 
 ## 전단지에 넣는 방법
 
-폴더 구조와 lint 규칙을 flyer-g-fe와 똑같이 맞췄습니다. 같은 경로에 복사하면 됩니다.
+셔플보드는 클릭 배틀을 바꾸지 않고 **새 위젯(`SHUFFLEBOARD`)으로 따로 추가**합니다.
+전단지 최신 main(`38756e5`)에 그대로 붙여 확인했어요(타입 검사, lint, 테스트, 빌드 통과).
+폴더 구조와 lint 규칙이 flyer-g-fe와 같아서 대부분 같은 경로에 복사하면 됩니다.
+
+### 1. 파일 복사
 
 | 이 레포 | 전단지에서 |
 | --- | --- |
-| `src/entities/game/model/shuffleboard*.ts` | 그대로 복사 |
-| `src/features/shuffleboard/` | 그대로 복사. `api/game-socket.ts`는 빼고 클릭 배틀의 `gameSocketBase()`를 import. `model/player-binding.ts`는 클릭 배틀 것과 같은 파일이라 `shared`로 옮겨 함께 써도 됨 |
-| `src/pages/Shuffleboard*.tsx` | 그대로 복사 |
-| `src/shared/config/survey.ts` | 복사하고 전단지 `.env`에 `VITE_SURVEY_URL` 추가 |
-| `src/shared/config/routes.ts`의 셔플보드 두 줄 | 전단지 `routes.ts`의 `paths`·`to`에 추가 |
-| `src/shared/config/venue.ts` | 복사 후 `venueOfRoom()`만 기기 설정의 장소(구관/신관)를 읽도록 변경. TV 머리 줄에 장소 이름을 띄우는 데만 씀 |
+| `src/entities/game/model/shuffleboard*.ts` (테스트 포함) | 그대로 복사 |
+| `src/features/shuffleboard/` | 그대로 복사. 단, `api/game-socket.ts`는 빼고 클릭 배틀의 `gameSocketBase()`를 import. `model/player-binding.ts`는 클릭 배틀 것과 같은 파일이라 `shared`로 옮겨 같이 써도 됨 |
+| `src/pages/ShuffleboardTvPage.tsx`, `ShuffleboardPlayPage.tsx` | 복사 후 설문 주소를 `surveyQr()` 대신 `operation.ts`의 `SURVEY_URL`로 바꿈 |
+| `src/shared/config/venue.ts` | 복사. TV 머리 줄의 구관/신관 이름에만 씀 |
+| `src/shared/config/survey.ts` | 복사하지 않음 (전단지는 `SURVEY_URL`을 씀) |
 
-그다음 TV 위젯 순환에 넣습니다. `ShuffleboardWidget`은 `BattleWidget`과 **props가 똑같습니다**(행사 시간대용 `pinned`·`survey` 포함). 설문 QR은 `survey`로 받은 전단지 운영 설정(`operation.ts`의 `SURVEY_URL`) 링크를 씁니다.
+### 2. 고칠 파일
 
-1. 위젯 종류에 `SHUFFLEBOARD`를 추가합니다(`entities/widget/model/types.ts`, `content.ts`, `settings.ts`). 클릭 배틀을 아예 바꿀 거라면 이 단계 없이 2번만 하면 됩니다.
-2. `pages/DisplayPage.tsx`에서 `CLICK_BATTLE`일 때 `<BattleWidget … />`를 그리는 자리에 같은 방식으로 `<ShuffleboardWidget … />`를 그립니다.
-3. 라우터에 `ShuffleboardTvPage`(TV 단독 화면)와 `ShuffleboardPlayPage`(폰, `PlayLayout` 아래)를 추가합니다.
+| 파일 | 할 일 |
+| --- | --- |
+| `entities/widget/model/types.ts` | 위젯 종류에 `"SHUFFLEBOARD"` 추가, 기본 비율 `SHUFFLEBOARD: 20` |
+| `entities/widget/model/content.ts` | 내용 타입에 `{ type: "SHUFFLEBOARD" }`, 읽는 `switch`에 case 추가 |
+| `entities/widget/model/feed.ts` | 단독 화면 위젯 목록에 `"SHUFFLEBOARD"` 추가 |
+| `entities/widget/model/settings.ts` | 이름 `"셔플보드"`와 설명 한 줄 추가. 관리자 화면의 위젯 고르는 목록에 이 이름으로 나옴 |
+| `entities/widget/ui/WidgetDisplay.tsx` | `case "SHUFFLEBOARD":`를 `CLICK_BATTLE` 옆에 붙임 (플레이어가 따로 그림) |
+| `pages/DisplayPage.tsx` | `GAME_WIDGETS = ["CLICK_BATTLE", "SHUFFLEBOARD"]`를 만들어 `CLICK_BATTLE`만 비교하던 두 곳(게임을 열 수 없는 TV에서 빼기, 시간대 규칙)을 바꿈. `BattleWidget`을 그리는 자리 옆에 같은 props로 `<ShuffleboardWidget … />` 분기 추가 (props가 `BattleWidget`과 똑같음) |
+| `shared/config/routes.ts` | `paths`와 `to`에 `shuffleboard`(`/games/shuffleboard/:roomId`), `playShuffleboard`(`/play/shuffleboard/:roomId`) 추가 |
+| `app/router/route-tree.tsx` | `ShuffleboardTvPage`는 TV 단독 화면으로, `ShuffleboardPlayPage`는 `PlayLayout` 아래에 추가 |
+| `index.css` | `@theme`에 보드 색 토큰 `--color-board-*` 8줄 추가 (이 레포 `index.css`에서 복사) |
+| 테스트 2개 | 위젯 개수 `10 → 11`: `http-widget-repository.test.ts`(두 곳, 목록에 `"SHUFFLEBOARD"`도 추가), `widget-settings-form.test.ts` |
+
+### 3. TV에 띄우기
+
+게임 시간대는 관리자 화면에서 고르는 방식으로 바뀌는 중입니다. 위 2번에서 위젯 종류(`types.ts`)와 이름(`settings.ts`)을 등록하면,
+관리자 화면에서 시간대의 위젯으로 **셔플보드**를 고를 수 있으면 됩니다. 시간대 화면을 만들 때 위젯 목록을 손으로 적는다면 `SHUFFLEBOARD`도 넣어 주세요.
+셔플보드 시간대에도 클릭 배틀처럼 설문 링크(`survey`)를 같이 넘기면 TV 오른쪽 위 설문 QR이 뜹니다.
+
+### 백엔드
+
+**게임 쪽은 할 일 없음.** 클릭 배틀과 같은 게임 중계(`/games/ws`)와 기기 토큰 인증을 그대로 씁니다.
+실제 flyer-g-be로 틀린 토큰 거부, TV 연결, 폰 두 대 참가, 한 판 끝까지를 확인했어요. 다음 경우에만 백엔드를 봐야 합니다.
+
+- **시간대·위젯 설정을 백엔드에 저장한다면:** 저장할 때 위젯 종류를 검사하는 목록에 `SHUFFLEBOARD`를 추가해야 합니다. 빠지면 관리자 화면에서 셔플보드를 골라도 저장이 거절되거나 TV에서 빠집니다.
+- **셔플보드를 전단지 프론트와 다른 도메인에서 띄운다면:** 그 주소를 `CORS_ALLOWED_ORIGINS`에 추가해야 합니다. 안 하면 게임 중계 접속이 403으로 막힙니다. 같은 도메인이면 필요 없습니다.
 
 ## 지난 버전
 
@@ -96,6 +122,5 @@ bun run play:lan
 
 ## 정해야 할 것
 
-- 설문 노션폼 주소 (`VITE_SURVEY_URL`)
 - 경기 중 연결이 끊긴 사람의 처리(기권/취소 정책) — `SHUFFLEBOARD_RULES.disconnectPolicy`
 - 점수 구역과 발사 횟수 확정 — 지금은 명세서의 MVP 제안값
