@@ -57,6 +57,8 @@ export interface FinishedMatch {
 }
 
 const finishedKey = (roomId: string) => `flyerg:shuffleboard-finished:${roomId}`;
+/** 결과 화면을 닫은 경기. TV가 결과를 몇 초 더 보내는 동안 다시 뜨지 않게 한다. */
+const dismissedKey = (roomId: string) => `flyerg:shuffleboard-dismissed:${roomId}`;
 
 function readStored<T>(key: string): T | null {
   try {
@@ -129,6 +131,7 @@ export function useShuffleboardPlayer(roomId: string, options: UseShuffleboardPl
           };
           setFinished((current) => {
             if (current?.matchId === record.matchId) return current;
+            if (readStored<string>(dismissedKey(roomId)) === record.matchId) return current;
             writeStored(finishedKey(roomId), record);
             return record;
           });
@@ -171,6 +174,8 @@ export function useShuffleboardPlayer(roomId: string, options: UseShuffleboardPl
 
   /** 결과 화면을 닫고 다음 경기에 참가할 수 있게 한다. */
   const dismissFinished = useCallback(() => {
+    const current = readStored<FinishedMatch>(finishedKey(roomId));
+    if (current) writeStored(dismissedKey(roomId), current.matchId);
     writeStored(finishedKey(roomId), null);
     setFinished(null);
   }, [roomId]);

@@ -70,6 +70,16 @@ export function ShuffleboardPlayPage() {
   const seconds = secondsLeft(state, now);
   const seat = player.mySeat;
 
+  // TV가 방금 끝난 경기의 결과를 띄우는 동안. 몇 초 뒤 방이 비면 참가 화면으로 바뀐다.
+  if (state.phase === "FINISHED") {
+    return (
+      <Notice
+        title="다음 경기를 준비하고 있어요"
+        description={`${seconds ?? 0}초쯤 뒤에 참가할 수 있어요. 이 화면을 열어 두세요.`}
+      />
+    );
+  }
+
   if (!seat) {
     if (state.phase !== "WAITING") {
       return (
@@ -179,12 +189,35 @@ function Scoreboard({ state, mySeat }: { state: MatchState; mySeat: Seat }) {
 
 /**
  * 경기 종료 화면. 방은 다음 참가자를 받고, 이 폰에는 결과와 설문 안내가 남는다.
- * 설문은 노션폼이다. TV 오른쪽 위 QR과 같은 주소라 여기서 바로 열 수도 있다.
+ *
+ * 한 판만 하고 가는 사람이 대부분이라 "다음 경기"를 권하지 않는다. 설문에 참여하거나
+ * 건너뛰면 "끝났어요"로 마무리한다. 다시 하고 싶은 사람만 쓰도록 작은 글씨로 길을 둔다.
+ * 설문은 노션폼이다. TV 오른쪽 위 QR과 같은 주소라 여기서 바로 열 수 있다.
  */
 function FinishView({ finished, onNext }: { finished: FinishedMatch; onNext: () => void }) {
+  const [ended, setEnded] = useState<"survey" | "skipped" | null>(null);
+  const survey = surveyUrl();
+
+  if (ended) {
+    return (
+      <div className="flex flex-1 flex-col justify-center gap-4 text-center">
+        <h1 className="text-title text-ink">
+          {ended === "survey" ? "설문에 참여해 줘서 고마워요" : "함께해 줘서 고마워요"}
+        </h1>
+        <p className="text-body text-ink-muted">게임이 끝났어요. 이 창은 닫아도 돼요.</p>
+        <button
+          type="button"
+          onClick={onNext}
+          className="mx-auto mt-6 text-label text-ink-subtle underline underline-offset-4"
+        >
+          한 판 더 하기
+        </button>
+      </div>
+    );
+  }
+
   const title =
     finished.result === "DRAW" ? "무승부예요" : finished.result === "WIN" ? "이겼어요!" : "아쉽게 졌어요";
-  const survey = surveyUrl();
   return (
     <div className="flex flex-1 flex-col gap-6 pt-4">
       <h1 className="text-title text-ink">{title}</h1>
@@ -206,17 +239,31 @@ function FinishView({ finished, onNext }: { finished: FinishedMatch; onNext: () 
           <p className="text-body text-ink-muted">
             로비 TV 게시판을 써 본 느낌을 들려주세요. 1분이면 끝나요.
           </p>
-          <Button asChild size="lg" className="mt-2 h-14 text-subhead">
-            <a href={survey} target="_blank" rel="noopener noreferrer">
-              설문 참여하기
-            </a>
-          </Button>
         </div>
       )}
 
-      <Button variant="outline" size="lg" className="mt-auto h-14 text-subhead" onClick={onNext}>
-        다음 경기 참가하기
-      </Button>
+      <div className="mt-auto flex flex-col gap-3">
+        {survey && (
+          <Button asChild size="lg" className="h-14 text-subhead">
+            <a
+              href={survey}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setEnded("survey")}
+            >
+              설문 참여하기
+            </a>
+          </Button>
+        )}
+        <Button
+          variant="outline"
+          size="lg"
+          className="h-14 text-subhead"
+          onClick={() => setEnded("skipped")}
+        >
+          {survey ? "건너뛰기" : "끝내기"}
+        </Button>
+      </div>
     </div>
   );
 }
