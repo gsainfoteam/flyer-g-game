@@ -15,7 +15,6 @@ import { gameSocketBase } from "@/features/shuffleboard/api/game-socket";
 import { useShuffleboardPlayer } from "@/features/shuffleboard/model/use-shuffleboard-player";
 import type { FinishedMatch } from "@/features/shuffleboard/model/use-shuffleboard-player";
 import { AimPad } from "@/features/shuffleboard/ui/AimPad";
-import { BoardView } from "@/features/shuffleboard/ui/BoardView";
 import { SEAT_TEXT } from "@/features/shuffleboard/ui/seat-style";
 import { surveyUrl } from "@/shared/config/survey";
 import { VENUE_LABEL, venueOfRoom } from "@/shared/config/venue";
@@ -152,25 +151,12 @@ export function ShuffleboardPlayPage() {
         {myTurn
           ? player.waitingForTv
             ? "던졌어요! TV를 보세요"
-            : `내 차례 · ${seconds ?? 0}초`
+            : `내 차례 · ${seconds ?? 0}초 · TV를 보고 던지세요`
           : state.rollingUntil !== null
             ? "원반이 굴러가는 중이에요"
             : `${seatOfTurn(state.turn)}팀 차례예요`}
       </p>
-      <div className="board-light rounded-card bg-surface p-3">
-        <BoardView
-          orientation="vertical"
-          pucks={state.pucks}
-          lastShot={state.lastShot}
-          rolling={state.rollingUntil !== null}
-          matchId={state.matchId}
-          from={190}
-          to={412}
-          labelSize={12}
-          className="mx-auto h-[26dvh] w-full"
-        />
-      </div>
-      <AimPad seat={seat} enabled={enabled} onShoot={player.shoot} />
+      <AimPad seat={seat} enabled={enabled} onShoot={player.shoot} className="flex-1" />
     </div>
   );
 }

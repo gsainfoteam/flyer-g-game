@@ -351,21 +351,6 @@
   --color-line-strong: #4a4a52;
 }
 
-/*
- * 밝은 화면(폰)용 셔플보드 보드. TV는 어두운 보드, 폰은 화면 톤에 맞춘 밝은 보드다.
- * 구성(점수 칸, 초록 10점 칸, 흰 선)은 같고 색만 바꾼다. 원반(팀 색)이 가장 진하다.
- */
-.board-light {
-  --color-board-rail: #c4cfe3;
-  --color-board-field: #eef2f8;
-  --color-board-zone-2: #dde6f6;
-  --color-board-zone-3: #cbdaf3;
-  --color-board-zone-7: #b6cbee;
-  --color-board-hot: #bde3c8;
-  --color-board-line: #ffffff;
-  --color-board-label: #34425f;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
