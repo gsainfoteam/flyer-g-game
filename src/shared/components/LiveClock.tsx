@@ -17,10 +17,17 @@ interface LiveClockProps {
   now?: Date;
   /** true면 기준 시각에서 흐른 시간만큼 전진한다. 미리보기·테스트는 고정이 기본. */
   ticking?: boolean;
+  /** full: "2026. 11. 01. (일) 15:19", time: "15:19"(TV 정보줄), date: "11월 1일 (일)"(TV 머리 줄) */
+  format?: "full" | "time" | "date";
   className?: string;
 }
 
-export function LiveClock({ now, ticking = false, className }: LiveClockProps) {
+export function LiveClock({
+  now,
+  ticking = false,
+  format = "full",
+  className,
+}: LiveClockProps) {
   const [tick, setTick] = useState(() => now ?? new Date());
 
   useEffect(() => {
@@ -43,7 +50,9 @@ export function LiveClock({ now, ticking = false, className }: LiveClockProps) {
 
   return (
     <p className={cn("tabular-nums text-ink-subtle", className)}>
-      {year}. {pad(month)}. {pad(day)}. ({weekday}) {pad(hour24)}:{pad(minute)}
+      {format === "date"
+        ? `${month}월 ${day}일 (${weekday})`
+        : `${format === "full" ? `${year}. ${pad(month)}. ${pad(day)}. (${weekday}) ` : ""}${pad(hour24)}:${pad(minute)}`}
     </p>
   );
 }

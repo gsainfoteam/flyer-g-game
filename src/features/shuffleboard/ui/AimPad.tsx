@@ -37,10 +37,12 @@ interface AimPadProps {
   seat: Seat;
   enabled: boolean;
   onShoot: (angle: number, power: number) => void;
+  /** 처음 던지는 사람에게 "아래로 당겨요" 손가락을 보여 준다(튜토리얼). 한 번 던지면 끈다. */
+  hint?: boolean;
   className?: string;
 }
 
-export function AimPad({ seat, enabled, onShoot, className }: AimPadProps) {
+export function AimPad({ seat, enabled, onShoot, hint = false, className }: AimPadProps) {
   const padRef = useRef<HTMLDivElement>(null);
   const startRef = useRef<{ x: number; y: number; id: number } | null>(null);
   const [aim, setAim] = useState<Aim | null>(null);
@@ -145,6 +147,19 @@ export function AimPad({ seat, enabled, onShoot, className }: AimPadProps) {
           <circle cx={puckX} cy={puckY} r={PUCK_R} fill={fill} stroke="var(--color-surface)" strokeWidth={4} />
           <circle cx={puckX} cy={puckY} r={PUCK_R * 0.45} fill="var(--color-surface)" fillOpacity={0.3} />
         </svg>
+        {hint && enabled && !aim && (
+          // 원반 위에서 아래로 내려가는 손가락. 따라 하면 바로 첫 발이 된다.
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute flex animate-pull-hint flex-col items-center"
+            style={{ left: cx - 20, top: cy - 12 }}
+          >
+            <span className="size-10 rounded-pill border-4 border-ink/60 bg-ink/10" />
+            <svg width="24" height="36" viewBox="0 0 24 36" className="mt-1 text-ink/60">
+              <path d="M12 2 V30 M4 22 L12 32 L20 22" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        )}
         <p className="absolute inset-x-0 bottom-5 text-center text-body text-ink-muted">
           {enabled
             ? aim

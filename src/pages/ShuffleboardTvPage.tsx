@@ -6,7 +6,7 @@ import { useShuffleboardHost } from "@/features/shuffleboard/model/use-shufflebo
 import { joinUrlOf } from "@/features/shuffleboard/model/join-url";
 import { LinkBadge, ShuffleboardStageFor } from "@/features/shuffleboard/ui/stage-helpers";
 import { Logo } from "@/shared/components/Logo";
-import { surveyUrl } from "@/shared/config/survey";
+import { surveyQr } from "@/shared/config/survey";
 import { VENUE_LABEL, venueOfRoom } from "@/shared/config/venue";
 import {
   captureDeviceTokenFromUrl,
@@ -40,7 +40,7 @@ export function ShuffleboardTvPage() {
         link={link}
         local={socketBase === null}
         joinUrlOf={(seat) => joinUrlOf(roomId, seat)}
-        surveyUrl={surveyUrl()}
+        survey={surveyQr()}
         header={
           <header className="flex h-14 shrink-0 items-center gap-6">
             <Logo size="lg" />

@@ -58,8 +58,11 @@ interface ShuffleboardStageProps {
   joinUrls: Record<Seat, string | null>;
   /** QR을 띄울 수 없을 때 그 자리에 적을 말 */
   closedLabel: string;
-  /** 설문(노션폼) 주소. 없으면 QR 자리에 설정 안내를 띄운다. */
-  surveyUrl: string | null;
+  /**
+   * 오른쪽 위 설문 QR. 클릭 배틀 위젯의 `survey`와 같은 값이다(전단지 운영 설정의 설문 링크).
+   * 없으면 그 자리를 비운다.
+   */
+  survey: { url: string; label: string } | null;
   /** 맨 위 머리 줄. 화면마다 다르다. */
   header: ReactNode;
 }
@@ -69,7 +72,7 @@ export function ShuffleboardStage({
   now,
   joinUrls,
   closedLabel,
-  surveyUrl,
+  survey,
   header,
 }: ShuffleboardStageProps) {
   const seconds = secondsLeft(state, now);
@@ -96,12 +99,14 @@ export function ShuffleboardStage({
           </h1>
           <p className="mt-4 text-[34px] text-ink-muted">{status.detail}</p>
         </div>
-        <SurveyCorner surveyUrl={surveyUrl} />
+        {survey && <SurveyCorner survey={survey} finished={state.phase === "FINISHED"} />}
       </div>
 
       {inMatch ? (
         <>
-          <div className="shrink-0 rounded-tv-card bg-surface p-6">
+          {/* 보드는 남는 높이를 다 쓴다. 전단지 플레이어 안(아래 정보줄이 있어 본문이 짧다)과
+              단독 TV 화면 모두에 맞게 높이를 정하지 않고 늘이고 줄인다. */}
+          <div className="min-h-0 flex-1 rounded-tv-card bg-surface p-6">
             <BoardView
               orientation="horizontal"
               pucks={state.pucks}
@@ -109,10 +114,10 @@ export function ShuffleboardStage({
               rolling={state.rollingUntil !== null}
               matchId={state.matchId}
               labelSize={16}
-              className="h-[388px] w-full"
+              className="h-full w-full"
             />
           </div>
-          <div className="grid min-h-0 flex-1 grid-cols-2 gap-8">
+          <div className="grid shrink-0 grid-cols-2 gap-8">
             {SEATS.map((seat) => (
               <SeatPanel key={seat} seat={seat} state={state} />
             ))}
@@ -129,23 +134,28 @@ export function ShuffleboardStage({
  * 오른쪽 위 설문 자리. 노션폼 QR이 대기 중에도 경기 중에도 늘 떠 있다.
  * 경기를 기다리는 사람, 구경하는 사람, 막 끝낸 사람 누구든 찍을 수 있다.
  */
-function SurveyCorner({ surveyUrl }: { surveyUrl: string | null }) {
+/**
+ * 판이 끝난 직후가 폰을 들고 있어 응답하기 가장 좋은 때라, 결과 화면에서는 강조한다
+ * (전단지 클릭 배틀의 설문 띠와 같은 규칙).
+ */
+function SurveyCorner({
+  survey,
+  finished,
+}: {
+  survey: { url: string; label: string };
+  finished: boolean;
+}) {
   return (
     <section
-      aria-label="전단지 설문"
-      className="flex shrink-0 items-center gap-7 rounded-tv-card bg-surface py-4 pr-9 pl-4"
-    >
-      {surveyUrl ? (
-        <QRCodeBox value={surveyUrl} size="lg" />
-      ) : (
-        <p className="grid size-[132px] place-items-center text-center text-[20px] leading-snug text-ink-subtle">
-          설문 주소
-          <br />
-          설정 필요
-        </p>
+      aria-label={survey.label}
+      className={cn(
+        "flex shrink-0 items-center gap-7 rounded-tv-card bg-surface py-4 pr-9 pl-4",
+        finished && "ring-6 ring-accent",
       )}
+    >
+      <QRCodeBox value={survey.url} size="lg" />
       <div>
-        <p className="text-[30px] leading-tight font-extrabold text-ink">전단지 설문</p>
+        <p className="text-[30px] leading-tight font-extrabold text-ink">{survey.label}</p>
         <p className="mt-2 text-[24px] leading-snug text-ink-muted">
           QR을 찍고 의견을
           <br />

@@ -54,6 +54,7 @@ bun run play:lan
 - **TV 대기:** 클릭 배틀과 같은 비율로 A팀·B팀 패널이 반씩. 각 패널 오른쪽 아래에 그 팀 QR. 오른쪽 위에 설문 QR.
 - **TV 경기 중:** 보드(가로)와 두 팀 점수·남은 원반. 오른쪽 위 설문 QR은 그대로.
 - **폰:** 팀 QR을 찍으면 버튼 하나로 참가 → 화면 가운데 큰 원반을 당겨 조준·발사(폰에는 보드가 없어 TV를 보고 감으로 던짐) → 경기가 끝나면 결과와 "설문 참여하기 / 건너뛰기". 어느 쪽이든 "끝났어요" 화면으로 마무리. 다시 하기는 **클릭 배틀과 같은 규칙**: 결과(10초) 뒤 방이 비면 같은 화면에 "다시 참가하기" 버튼이 나타나고, 누르면 다시 참가(자동 재경기·우선권 없음).
+- **튜토리얼:** 참가 화면과 상대를 기다리는 동안 그림과 세 줄짜리 "이렇게 던져요"를 보여 주고, 첫 차례에는 패드 위에 아래로 당기는 손가락이 움직여요(한 번 던지면 사라짐).
 - **보드:** 점수 없는 구간은 차분한 회색, 점수 칸만 채도 낮은 파랑(10점 쪽으로 갈수록 진함), 끝의 10점 칸은 초록(GamePigeon 사진 참고). 색은 `index.css`의 `--color-board-*` 토큰.
 
 ## 게임 규칙
@@ -82,7 +83,7 @@ bun run play:lan
 | `src/shared/config/routes.ts`의 셔플보드 두 줄 | 전단지 `routes.ts`의 `paths`·`to`에 추가 |
 | `src/shared/config/venue.ts` | 복사 후 `venueOfRoom()`만 기기 설정의 장소(구관/신관)를 읽도록 변경. TV 머리 줄에 장소 이름을 띄우는 데만 씀 |
 
-그다음 TV 위젯 순환에 넣습니다. `ShuffleboardWidget`은 `BattleWidget`과 **props가 똑같습니다.**
+그다음 TV 위젯 순환에 넣습니다. `ShuffleboardWidget`은 `BattleWidget`과 **props가 똑같습니다**(행사 시간대용 `pinned`·`survey` 포함). 설문 QR은 `survey`로 받은 전단지 운영 설정(`operation.ts`의 `SURVEY_URL`) 링크를 씁니다.
 
 1. 위젯 종류에 `SHUFFLEBOARD`를 추가합니다(`entities/widget/model/types.ts`, `content.ts`, `settings.ts`). 클릭 배틀을 아예 바꿀 거라면 이 단계 없이 2번만 하면 됩니다.
 2. `pages/DisplayPage.tsx`에서 `CLICK_BATTLE`일 때 `<BattleWidget … />`를 그리는 자리에 같은 방식으로 `<ShuffleboardWidget … />`를 그립니다.

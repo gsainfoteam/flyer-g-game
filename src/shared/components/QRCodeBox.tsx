@@ -40,6 +40,8 @@ const sizeClassName = {
   lg: "size-[132px]",
   /** TV 단일 레이아웃 */
   tv: "size-[240px]",
+  /** TV 게임 화면 아래 띠(설문). 팀 참가 QR(240)보다 작게 둬 구분한다. 약 1.1m에서 스캔 */
+  band: "size-[176px]",
 };
 
 export function QRCodeBox({

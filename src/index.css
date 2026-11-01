@@ -153,12 +153,37 @@
   /* 숫자·파울 선·발사 자리처럼 판 위에 쓰는 글자와 표시 */
   --color-board-label: #ffffff;
 
+  /* --- 컨텐츠 종류 색 ---------------------------------------------------
+     신청 종류(포스터·이벤트 배너·소식 제보)를 아이콘·칩·구성 막대에서 가른다.
+     항상 종류 이름과 함께 쓴다. `-bright`는 어두운 강조 카드 위에서 쓰는 밝은 값이다. */
+  --color-type-poster: #1d4ed8;
+  --color-type-poster-subtle: #eff6ff;
+  --color-type-poster-bar: #3b82f6;
+  --color-type-poster-bright: #93c5fd;
+  --color-type-event: #dd2b0f;
+  --color-type-event-subtle: #fff2ef;
+  --color-type-event-bar: #ef4444;
+  --color-type-event-bright: #ffc4b8;
+  --color-type-story: #b45309;
+  --color-type-story-subtle: #fffbeb;
+  --color-type-story-bar: #f59e0b;
+  --color-type-story-bright: #fcd34d;
+
+  /* 어두운 강조 카드(심사 대기 건수 같은 첫 화면의 핵심 숫자) */
+  --color-hero: #18181b;
+  --color-hero-raised: #242428;
+  --color-hero-ink: #f6f6f7;
+  --color-hero-muted: #b4b4bb;
+
   /* --- 모서리 -----------------------------------------------------------
      카드 16px, 조작 요소 10px, 칩과 배지는 알약. 과한 라운딩은 장난감처럼
      보인다. */
   --radius-thumb: 0.5rem;
   --radius-control: 0.625rem;
   --radius-card: 1rem;
+  /* 첫 화면의 큰 묶음과 아이콘 사각형 */
+  --radius-block: 1.25rem;
+  --radius-tile: 0.75rem;
   --radius-dialog: 1rem;
   --radius-pill: 9999px;
   /* TV 스테이지(1920x1080 실측) 전용. 관리 화면 기준으로는 보이지 않을 만큼 작다. */
@@ -182,6 +207,27 @@
 
   /* 로그인 배경의 전단 기둥이 천천히 흐른다. 목록을 두 번 이어 붙여 두고 절반만큼
      올리면 처음과 같은 모습이 되어 끊김 없이 반복된다. 속도는 기둥마다 다르게 준다. */
+  /* 셔플보드 폰 튜토리얼: 첫 차례에 "아래로 당겨요" 손가락이 원반에서 아래로 내려간다. */
+  --animate-pull-hint: pull-hint 1.8s var(--ease-standard) infinite;
+  @keyframes pull-hint {
+    0%,
+    15% {
+      transform: translateY(0);
+      opacity: 0;
+    }
+    30% {
+      opacity: 1;
+    }
+    75% {
+      transform: translateY(110px);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(110px);
+      opacity: 0;
+    }
+  }
+
   --animate-flyer-drift: flyer-drift 80s linear infinite;
   @keyframes flyer-drift {
     from {
@@ -192,8 +238,45 @@
     }
   }
 
+  /* 소개 화면의 예시 TV. 포스터 띠는 두 번 이어 붙인 목록을 절반만큼 옆으로 민다.
+     정보줄의 진행 막대는 장면 하나가 머무는 시간 동안 왼쪽에서 오른쪽으로 찬다. */
+  --animate-tv-sample-strip: tv-sample-strip 28s linear infinite;
+  @keyframes tv-sample-strip {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes tv-sample-progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  /* TV 정보줄의 진행 막대. 화면 하나가 머무는 시간 동안 찬다. */
+  @keyframes tv-info-progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  @keyframes tv-sample-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
   /* --- 레이아웃 ---------------------------------------------------------- */
-  --container-content: 1120px;
+  --container-content: 1200px;
   --container-form: 720px;
   /* TV 기준 해상도. 플레이어 레이아웃 검증용 breakpoint. */
   --breakpoint-tv: 1920px;

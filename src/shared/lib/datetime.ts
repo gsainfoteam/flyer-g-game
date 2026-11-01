@@ -201,3 +201,38 @@ export function formatSeoulShortDateTime(date: Date): string {
   const { hour24, minute } = getSeoulParts(date);
   return `${formatSeoulShortDateWithWeekday(date)} ${pad(hour24)}:${pad(minute)}`;
 }
+
+/** "11월 14일" — 사람에게 보여 주는 첫 화면·목록의 날짜 */
+export function formatSeoulMonthDay(date: Date): string {
+  const { month, day } = getSeoulParts(date);
+  return `${month}월 ${day}일`;
+}
+
+/**
+ * 하루 단위 기간의 마지막 날. 끝 시각이 서울 자정이면 그 전날로 읽는다. 하루 단위
+ * 기간은 다음 날 00:00에 끝나도록 저장되기 때문이다.
+ */
+export function seoulLastDay(startAt: Date, endAt: Date): Date {
+  const end = getSeoulParts(endAt);
+  return end.hour24 === 0 && end.minute === 0 && endAt > startAt
+    ? new Date(endAt.getTime() - 1)
+    : endAt;
+}
+
+/** 기간의 날 수. 11월 3일 00:00 – 15일 00:00은 12일이다. */
+export function seoulDayCount(startAt: Date, endAt: Date): number {
+  return seoulDayDiff(startAt, seoulLastDay(startAt, endAt)) + 1;
+}
+
+/** "11월 3일 – 14일", "10월 31일 – 11월 2일", 하루면 "10월 31일" */
+export function formatSeoulDayRange(startAt: Date, endAt: Date): string {
+  const lastDay = seoulLastDay(startAt, endAt);
+  const from = getSeoulParts(startAt);
+  const to = getSeoulParts(lastDay);
+  if (from.year === to.year && from.month === to.month) {
+    return from.day === to.day
+      ? `${from.month}월 ${from.day}일`
+      : `${from.month}월 ${from.day}일 – ${to.day}일`;
+  }
+  return `${from.month}월 ${from.day}일 – ${to.month}월 ${to.day}일`;
+}

@@ -15,6 +15,7 @@ import { gameSocketBase } from "@/features/shuffleboard/api/game-socket";
 import { useShuffleboardPlayer } from "@/features/shuffleboard/model/use-shuffleboard-player";
 import type { FinishedMatch } from "@/features/shuffleboard/model/use-shuffleboard-player";
 import { AimPad } from "@/features/shuffleboard/ui/AimPad";
+import { HowToPlay } from "@/features/shuffleboard/ui/HowToPlay";
 import { SEAT_TEXT } from "@/features/shuffleboard/ui/seat-style";
 import { surveyUrl } from "@/shared/config/survey";
 import { VENUE_LABEL, venueOfRoom } from "@/shared/config/venue";
@@ -109,9 +110,10 @@ export function ShuffleboardPlayPage() {
           </h1>
           <p className="mt-2 text-body text-ink-muted">
             <span className={cn("font-bold", SEAT_TEXT[nextSeat])}>{nextSeat}팀</span>으로 참가해요.
-            두 명이 모이면 바로 시작하고, 번갈아 {SHUFFLEBOARD_RULES.shotsPerSeat}번씩 던져요.
+            두 명이 모이면 바로 시작해요.
           </p>
         </div>
+        <HowToPlay seat={nextSeat} />
         {player.rejection && (
           <p role="alert" className="text-label text-danger">
             {player.rejection === "FULL"
@@ -133,11 +135,20 @@ export function ShuffleboardPlayPage() {
   }
 
   if (state.phase === "WAITING" || state.phase === "READY") {
+    // 기다리는 동안 던지는 법을 한 번 더 보여 준다.
     return (
-      <Notice
-        title={state.phase === "READY" ? `${seconds ?? 0}초 뒤 시작해요` : "상대를 기다리는 중이에요"}
-        description={`${seat}팀으로 참가했어요. ${seat === "A" ? "먼저" : "두 번째로"} 던져요.`}
-      />
+      <div className="flex flex-1 flex-col gap-6 pt-4">
+        <div role="status">
+          <h1 className="text-title text-ink">
+            {state.phase === "READY" ? `${seconds ?? 0}초 뒤 시작해요` : "상대를 기다리는 중이에요"}
+          </h1>
+          <p className="mt-2 text-body text-ink-muted">
+            <span className={cn("font-bold", SEAT_TEXT[seat])}>{seat}팀</span>으로 참가했어요.{" "}
+            {seat === "A" ? "먼저" : "두 번째로"} 던져요.
+          </p>
+        </div>
+        <HowToPlay seat={seat} />
+      </div>
     );
   }
 
@@ -156,7 +167,13 @@ export function ShuffleboardPlayPage() {
             ? "원반이 굴러가는 중이에요"
             : `${seatOfTurn(state.turn)}팀 차례예요`}
       </p>
-      <AimPad seat={seat} enabled={enabled} onShoot={player.shoot} className="flex-1" />
+      <AimPad
+        seat={seat}
+        enabled={enabled}
+        onShoot={player.shoot}
+        hint={shotsTaken(state, seat) === 0}
+        className="flex-1"
+      />
     </div>
   );
 }

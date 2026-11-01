@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { StageHeader } from "@/entities/poster/ui/StageHeader";
-import { surveyUrl } from "@/shared/config/survey";
 import { useShuffleboardHost } from "../model/use-shuffleboard-host";
 import { joinUrlOf } from "../model/join-url";
 import { ShuffleboardStageFor } from "./stage-helpers";
@@ -8,7 +7,7 @@ import { ShuffleboardStageFor } from "./stage-helpers";
 /**
  * 전단지 플레이어 순환 중에 뜨는 셔플보드 위젯.
  *
- * 클릭 배틀의 `BattleWidget`과 받는 값(props)과 내보내는 신호가 똑같다. 전단지의
+ * 클릭 배틀의 `BattleWidget`과 받는 값(props: pinned·survey 포함)과 내보내는 신호가 똑같다. 전단지의
  * `DisplayPage`에서 `<BattleWidget … />` 자리에 `<ShuffleboardWidget … />`를 넣으면
  * 게임 종류만 바뀐다.
  *
@@ -29,6 +28,13 @@ interface ShuffleboardWidgetProps {
   serverTime: Date | null;
   onActiveChange: (active: boolean) => void;
   onSessionEnd: () => void;
+  /**
+   * 행사 시간대처럼 이 화면에 고정된 때. 순환으로 돌려보낼 일이 없으니 세션 상한·상대 팀
+   * 기다림으로 판을 비우지 않는다(기다리던 참가자가 쫓겨나지 않게). BattleWidget과 같다.
+   */
+  pinned?: boolean;
+  /** 오른쪽 위 설문 QR. BattleWidget과 같은 값을 넘긴다. */
+  survey?: { url: string; label: string } | null;
 }
 
 export function ShuffleboardWidget({
@@ -39,11 +45,13 @@ export function ShuffleboardWidget({
   serverTime,
   onActiveChange,
   onSessionEnd,
+  pinned = false,
+  survey = null,
 }: ShuffleboardWidgetProps) {
   const { state, now, status, active } = useShuffleboardHost(roomId, {
     socketBase,
     token,
-    ...WIDGET_LIMITS,
+    ...(pinned ? {} : WIDGET_LIMITS),
   });
 
   // 콜백은 렌더마다 새로 올 수 있다. effect가 되풀이되지 않게 ref로 든다.
@@ -69,7 +77,7 @@ export function ShuffleboardWidget({
       link={status}
       local={socketBase === null}
       joinUrlOf={(seat) => joinUrlOf(roomId, seat)}
-      surveyUrl={surveyUrl()}
+      survey={survey}
       header={
         <StageHeader deviceLabel={deviceLabel} serverTime={serverTime} clockTicking>
           <span className="text-[26px] font-extrabold text-ink-muted">셔플보드</span>
