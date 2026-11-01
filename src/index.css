@@ -143,12 +143,12 @@
      점수가 없는 구간은 차분한 회색으로 두고, 점수 칸만 채도 낮은 파랑으로 칠해
      10점 쪽으로 갈수록 조금씩 진해진다. 끝의 10점 칸은 초록(GamePigeon 참고).
      원반(팀 색)이 가장 눈에 띄도록 판은 모두 한 톤 낮춘다. */
-  --color-board-rail: #1d2129;
-  --color-board-field: #2c3039;
-  --color-board-zone-2: #313b4d;
-  --color-board-zone-3: #36445c;
-  --color-board-zone-7: #3c4f6d;
-  --color-board-hot: #3c7352;
+  --color-board-rail: #161e32;
+  --color-board-field: #262f45;
+  --color-board-zone-2: #2a3f6e;
+  --color-board-zone-3: #2f4884;
+  --color-board-zone-7: #33529a;
+  --color-board-hot: #398b55;
   --color-board-line: #ffffff;
 
   /* --- 모서리 -----------------------------------------------------------

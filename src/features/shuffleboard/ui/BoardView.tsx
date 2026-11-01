@@ -178,7 +178,7 @@ export function BoardView({
               fontSize={labelSize}
               fontWeight={800}
               fill="var(--color-board-line)"
-              fillOpacity={0.75}
+              fillOpacity={0.9}
             >
               {zone.points}
             </text>
@@ -188,7 +188,7 @@ export function BoardView({
       {[...zones.map((zone) => zone.minY), BOARD.length].map((y) => {
         const line = across(y);
         return line ? (
-          <line key={y} {...line} stroke="var(--color-board-line)" strokeOpacity={0.45} strokeWidth={0.8} />
+          <line key={y} {...line} stroke="var(--color-board-line)" strokeOpacity={0.7} strokeWidth={0.85} />
         ) : null;
       })}
 
@@ -197,7 +197,7 @@ export function BoardView({
         <line
           {...foul}
           stroke="var(--color-board-line)"
-          strokeOpacity={0.3}
+          strokeOpacity={0.45}
           strokeWidth={0.8}
           strokeDasharray="3 3"
         />
