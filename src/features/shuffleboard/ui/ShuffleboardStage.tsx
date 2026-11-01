@@ -101,7 +101,7 @@ export function ShuffleboardStage({
           </h1>
           <p className="mt-4 text-[34px] text-ink-muted">{status.detail}</p>
         </div>
-        <VenueBest ranking={ranking} venue={venue} />
+        <RankingCorner ranking={ranking} venue={venue} />
       </div>
 
       {inMatch ? (
@@ -124,13 +124,17 @@ export function ShuffleboardStage({
           </div>
         </>
       ) : (
-        <Lobby state={state} joinUrls={joinUrls} closedLabel={closedLabel} ranking={ranking} />
+        <Lobby state={state} joinUrls={joinUrls} closedLabel={closedLabel} />
       )}
     </div>
   );
 }
 
-function VenueBest({
+/**
+ * 오른쪽 위 랭킹 자리. 경기 랭킹 1~3위와 구관/신관 최고 점수를 작게 모아 둔다.
+ * 화면의 주인공은 두 팀이라 랭킹은 이 자리를 넘지 않는다.
+ */
+function RankingCorner({
   ranking,
   venue,
 }: {
@@ -138,17 +142,42 @@ function VenueBest({
   venue: Venue | null;
 }) {
   return (
-    <section aria-label="장소별 최고 점수" className="flex shrink-0 gap-8 rounded-tv-card bg-surface px-10 py-6">
-      {VENUES.map((item) => (
-        <div key={item} className="min-w-[150px]">
-          <p className={cn("text-[26px] font-bold", item === venue ? "text-ink" : "text-ink-subtle")}>
-            {VENUE_LABEL[item]} 최고
+    <section
+      aria-label="랭킹"
+      className="flex shrink-0 gap-10 rounded-tv-card bg-surface px-9 py-5"
+    >
+      <div className="flex flex-col justify-center gap-2">
+        {VENUES.map((item) => (
+          <p key={item} className="flex items-baseline gap-4">
+            <span
+              className={cn(
+                "w-[118px] text-[24px] font-bold",
+                item === venue ? "text-ink" : "text-ink-subtle",
+              )}
+            >
+              {VENUE_LABEL[item]} 최고
+            </span>
+            <span className="text-[40px] leading-none font-extrabold text-ink tabular-nums">
+              {ranking.venueBest[item] ?? "–"}
+            </span>
           </p>
-          <p className="mt-1 text-[56px] leading-none font-extrabold tabular-nums text-ink">
-            {ranking.venueBest[item] ?? "–"}
-          </p>
-        </div>
-      ))}
+        ))}
+      </div>
+      <ol aria-label="경기 랭킹" className="flex w-[330px] flex-col justify-center gap-1">
+        {ranking.top.length > 0 ? (
+          ranking.top.slice(0, 3).map((entry, index) => (
+            <li key={entry.matchId} className="flex items-baseline gap-3 text-[24px]">
+              <span className="w-5 font-extrabold text-ink-subtle tabular-nums">{index + 1}</span>
+              <span className="min-w-0 flex-1 truncate font-bold text-ink">{entry.name}</span>
+              <span className="font-extrabold text-ink tabular-nums">{entry.score}</span>
+            </li>
+          ))
+        ) : (
+          <li className="text-[22px] leading-snug text-ink-subtle">
+            이기고 설문까지 내면 랭킹에 올라가요
+          </li>
+        )}
+      </ol>
     </section>
   );
 }
@@ -193,83 +222,59 @@ function Lobby({
   state,
   joinUrls,
   closedLabel,
-  ranking,
 }: {
   state: MatchState;
   joinUrls: Record<Seat, string | null>;
   closedLabel: string;
-  ranking: RankingSnapshot;
 }) {
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-[1fr_1fr_1.15fr] gap-8">
-      {SEATS.map((seat) => {
-        const seated = state.seats[seat] !== null;
-        const url = joinUrls[seat];
-        return (
-          <section
-            key={seat}
-            aria-label={`${seat}팀 참가`}
-            className={cn(
-              "flex flex-col items-center gap-6 rounded-tv-card px-10 py-10",
-              seated ? "bg-surface-muted" : "bg-surface",
-            )}
-          >
-            <h2 className={cn("self-start text-[56px] leading-none font-extrabold", SEAT_TEXT[seat])}>
-              {seat}팀
-            </h2>
-            <div className="grid flex-1 place-items-center">
-              {seated ? (
-                <p className="text-center text-[40px] leading-tight font-extrabold text-ink">
-                  준비됐어요
-                </p>
-              ) : url ? (
-                <QRCodeBox value={url} size="tv" />
-              ) : (
-                <p className="text-center text-[26px] leading-snug whitespace-pre-line text-ink-subtle">
-                  {closedLabel}
-                </p>
-              )}
-            </div>
-            <p className={cn("text-[32px] font-extrabold", seated ? "text-ink-subtle" : SEAT_TEXT[seat])}>
-              {seated ? "상대를 기다리는 중" : `${seat}팀으로 참가`}
-            </p>
-          </section>
-        );
-      })}
-
-      <section aria-label="랭킹" className="flex min-h-0 flex-col rounded-tv-card bg-surface px-10 py-10">
-        <h2 className="text-[44px] font-extrabold text-ink">경기 랭킹</h2>
-        {ranking.top.length > 0 ? (
-          <ol className="mt-8 flex flex-col gap-6">
-            {ranking.top.slice(0, 3).map((entry, index) => (
-              <li key={entry.matchId} className="flex items-baseline gap-5">
-                <span className="w-10 shrink-0 text-[40px] font-extrabold text-ink-subtle tabular-nums">
-                  {index + 1}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[40px] leading-tight font-bold text-ink">
-                    {entry.name}
-                  </span>
-                  {entry.venue && (
-                    <span className="text-[24px] text-ink-subtle">{VENUE_LABEL[entry.venue]}</span>
+    <>
+      <div className="grid min-h-0 flex-1 grid-cols-2 gap-8">
+        {SEATS.map((seat) => {
+          const seated = state.seats[seat] !== null;
+          const url = joinUrls[seat];
+          return (
+            <section
+              key={seat}
+              aria-label={`${seat}팀`}
+              className="flex min-h-0 gap-10 rounded-tv-card bg-surface px-14 py-12"
+            >
+              <div className="flex min-w-0 flex-1 flex-col">
+                <h2 className={cn("text-[56px] font-extrabold", SEAT_TEXT[seat])}>{seat}팀</h2>
+                <p
+                  className={cn(
+                    "mt-auto text-[96px] leading-none font-extrabold tracking-tight",
+                    seated ? SEAT_TEXT[seat] : "text-ink-subtle",
                   )}
-                </span>
-                <span className="text-[52px] leading-none font-extrabold text-ink tabular-nums">
-                  {entry.score}
-                </span>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p className="mt-8 text-[30px] leading-snug text-ink-muted">
-            아직 랭킹에 오른 경기가 없어요. 이기고 설문까지 내면 첫 기록이 돼요.
-          </p>
-        )}
-        <p className="mt-auto text-[24px] leading-snug text-ink-subtle">
-          경기에서 더 높은 점수를 낸 사람이 폰에서 로그인하고 설문을 내면 그 점수가 올라가요. TV에는
-          닉네임만 보여요.
-        </p>
-      </section>
-    </div>
+                >
+                  {seated ? "준비 완료" : "빈 자리"}
+                </p>
+                <p className="mt-6 text-[28px] text-ink-muted">
+                  {seated ? "상대를 기다리고 있어요" : "QR을 찍고 닉네임을 적어 주세요"}
+                </p>
+              </div>
+              <div className="flex w-[280px] shrink-0 flex-col items-center justify-end gap-4">
+                {seated ? null : url ? (
+                  <>
+                    <QRCodeBox value={url} size="tv" />
+                    <p className={cn("text-[32px] font-extrabold", SEAT_TEXT[seat])}>
+                      {seat}팀으로 참가
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-center text-[26px] leading-snug whitespace-pre-line text-ink-subtle">
+                    {closedLabel}
+                  </p>
+                )}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+      <p className="shrink-0 text-[24px] text-ink-subtle">
+        1:1 대결 · 번갈아 {SHUFFLEBOARD_RULES.shotsPerSeat}번씩 던져요 · 끝났을 때 보드에 남은 원반으로 점수를 매겨요 ·
+        이긴 사람이 로그인하고 설문을 내면 랭킹에 올라가요
+      </p>
+    </>
   );
 }
