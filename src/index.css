@@ -1,0 +1,346 @@
+@import "tailwindcss";
+/*
+ * Pretendard 가변 폰트. 동적 서브셋이라 브라우저가 화면에 실제로 쓰인 글자 구간만
+ * 내려받는다. 전체 2MB가 아니라 보통 100~300KB 수준이다.
+ * 자기 호스팅이므로 외부 CDN에 의존하지 않는다. (명세 9.3 신뢰성)
+ */
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* ==========================================================================
+   Flyer.G 디자인 토큰
+   --------------------------------------------------------------------------
+   이 파일이 색·타이포·간격·모서리·그림자·모션·레이아웃·레이어의 단일 원천이다.
+   컴포넌트에서 임의 hex, 임의 shadow, 임의 z-index를 새로 만들지 않는다.
+   설계 원칙과 사용 예시는 디자인 시스템 문서를 참고한다. (README의 문서 안내)
+   MVP는 light theme만 지원한다.
+   ========================================================================== */
+
+@theme {
+  /* --- 서체 -------------------------------------------------------------
+     Pretendard 가변 폰트를 자기 호스팅한다. 동적 서브셋이라 브라우저가 화면에
+     실제로 쓰인 유니코드 구간만 내려받는다. macOS, Windows, Raspberry Pi(TV)에서
+     같은 모양으로 보인다. */
+  --font-sans:
+    "Pretendard Variable", Pretendard, ui-sans-serif, system-ui,
+    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: var(--font-sans);
+
+  /* --- 타이포그래피 -----------------------------------------------------
+     단계마다 크기와 굵기를 함께 바꿔 위계를 만든다. 제목은 800, 항목 제목과
+     버튼은 700, 본문은 400이다. 자세한 규칙은 디자인 시스템 문서에 있다.
+
+       12 → 13 → 14 → 15 → 17 → 19 → 24 → 32 (px)
+  */
+  --text-overline: 0.75rem;
+  --text-overline--line-height: 1.35;
+  --text-overline--font-weight: 700;
+
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.5;
+  --text-caption--font-weight: 400;
+
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.5;
+  --text-label--font-weight: 500;
+
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.65;
+  --text-body--font-weight: 400;
+
+  /* 목록 항목 제목. 본문보다 크고 굵어 훑을 때 먼저 잡힌다. */
+  --text-subhead: 1.0625rem;
+  --text-subhead--line-height: 1.4;
+  --text-subhead--font-weight: 700;
+
+  --text-heading: 1.1875rem;
+  --text-heading--line-height: 1.35;
+  --text-heading--font-weight: 800;
+  --text-heading--letter-spacing: -0.02em;
+
+  --text-title: 1.5rem;
+  --text-title--line-height: 1.3;
+  --text-title--font-weight: 800;
+  --text-title--letter-spacing: -0.025em;
+
+  --text-display: 2rem;
+  --text-display--line-height: 1.25;
+  --text-display--font-weight: 800;
+  --text-display--letter-spacing: -0.025em;
+
+  /* 수치. tabular-nums와 함께 쓴다. */
+  --text-metric: 1.125rem;
+  --text-metric--line-height: 1.2;
+  --text-metric--font-weight: 800;
+
+  /* 대시보드 상태별 건수처럼 한눈에 읽어야 하는 큰 수치 */
+  --text-stat: 1.625rem;
+  --text-stat--line-height: 1;
+  --text-stat--font-weight: 800;
+  --text-stat--letter-spacing: -0.025em;
+
+  /* --- 강조색 -----------------------------------------------------------
+     브랜드의 빨강이다. "지금 행동해야 하는 곳"에만 쓴다 — 주 작업 버튼,
+     처리해야 할 건수, 반려·중단처럼 게시자가 고쳐야 하는 상태, 브랜드 마크.
+     장식이나 브랜딩 배경으로 깔지 않는다. */
+  --color-accent: #ec3013;
+  --color-accent-100: #fff2ef;
+  --color-accent-200: #ffe0d9;
+  --color-accent-300: #ffc4b8;
+  --color-accent-600: #dd2b0f;
+  --color-accent-700: #ae1800;
+  --color-accent-800: #7c1405;
+  --color-accent-on: #ffffff;
+
+  /* 브랜드 마크의 압정 색. TV 스코프(.tv-surface)가 ink를 밝게 바꿔도 마크는
+     어느 바탕에서나 같아야 해서 ink와 별도로 둔다. public/favicon.svg와 같은 값이다. */
+  --color-brand-pin: #18181b;
+
+  /* --- 표면과 글자 ------------------------------------------------------
+     차가운 중성 회색. 면의 구분은 그림자 대신 아주 옅은 경계선(hairline)이
+     만든다. */
+  --color-canvas: #fafafa;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f4f4f5;
+  --color-line: #e8e8ea;
+  --color-line-strong: #d4d4d8;
+  --color-ink: #18181b;
+  --color-ink-muted: #52525b;
+  --color-ink-subtle: #71717a;
+  --color-ink-inverse: #ffffff;
+  --color-focus: #18181b;
+
+  /* --- 상태 색 ----------------------------------------------------------
+     절제된 semantic 색. 상태 칩과 알림에만 쓰고, 항상 문구를 함께 둔다 —
+     색만으로 상태를 구분하지 않는다는 절대 조건은 유지한다. (명세 9.6) */
+  --color-attention: var(--color-accent);
+  --color-attention-subtle: var(--color-accent-100);
+  --color-attention-strong: var(--color-accent-800);
+
+  --color-info: #2563eb;
+  --color-info-subtle: #eff6ff;
+  --color-info-strong: #1d4ed8;
+
+  --color-success: #059669;
+  --color-success-subtle: #ecfdf5;
+  --color-success-strong: #047857;
+
+  --color-warning: #d97706;
+  --color-warning-subtle: #fffbeb;
+  --color-warning-strong: #b45309;
+
+  --color-danger: var(--color-accent);
+  --color-danger-subtle: var(--color-accent-100);
+  --color-danger-strong: var(--color-accent-800);
+
+  /* TV 스테이지 바탕. 화면 밖 letterbox와 포스터 앰비언트의 기준색이다. */
+  --color-stage: #101012;
+
+  /* --- 모서리 -----------------------------------------------------------
+     카드 16px, 조작 요소 10px, 칩과 배지는 알약. 과한 라운딩은 장난감처럼
+     보인다. */
+  --radius-thumb: 0.5rem;
+  --radius-control: 0.625rem;
+  --radius-card: 1rem;
+  --radius-dialog: 1rem;
+  --radius-pill: 9999px;
+  /* TV 스테이지(1920x1080 실측) 전용. 관리 화면 기준으로는 보이지 않을 만큼 작다. */
+  --radius-tv-card: 1.5rem;
+  --radius-tv-poster: 1rem;
+
+  /* --- 그림자 -----------------------------------------------------------
+     면의 위계는 경계선이 만들고, 그림자는 거의 없다시피 깔거나(카드)
+     떠 있는 것(팝오버·다이얼로그)에만 쓴다. */
+  --shadow-card: 0 1px 2px color-mix(in srgb, #18181b 4%, transparent);
+  --shadow-floating: 0 4px 16px color-mix(in srgb, #18181b 10%, transparent);
+  --shadow-dialog: 0 16px 40px color-mix(in srgb, #18181b 18%, transparent);
+  /* TV의 어두운 스테이지 위 포스터. 바탕에서 떠 보여야 포스터가 주인공이 된다. */
+  --shadow-poster: 0 16px 44px rgb(0 0 0 / 0.5);
+  --shadow-poster-lg: 0 32px 90px rgb(0 0 0 / 0.6);
+
+  /* --- 모션 -------------------------------------------------------------
+     duration은 Tailwind theme namespace가 없어 :root 변수로 함께 둔다. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
+
+  /* 로그인 배경의 전단 기둥이 천천히 흐른다. 목록을 두 번 이어 붙여 두고 절반만큼
+     올리면 처음과 같은 모습이 되어 끊김 없이 반복된다. 속도는 기둥마다 다르게 준다. */
+  --animate-flyer-drift: flyer-drift 80s linear infinite;
+  @keyframes flyer-drift {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-50%);
+    }
+  }
+
+  /* --- 레이아웃 ---------------------------------------------------------- */
+  --container-content: 1120px;
+  --container-form: 720px;
+  /* TV 기준 해상도. 플레이어 레이아웃 검증용 breakpoint. */
+  --breakpoint-tv: 1920px;
+}
+
+:root {
+  /* --- 간격 -------------------------------------------------------------
+     Tailwind v4의 4px 기반 spacing scale을 그대로 쓴다. (p-1 = 4px) */
+  --spacing: 0.25rem;
+
+  /* --- 모션 시간 --------------------------------------------------------
+     사용법: transition-all duration-(--duration-base) ease-standard */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+
+  /* --- 레이어 -----------------------------------------------------------
+     사용법: z-(--layer-header). 컴포넌트에서 새 z-index를 만들지 않는다. */
+  --layer-base: 0;
+  --layer-header: 30;
+  --layer-dropdown: 40;
+  --layer-dialog: 50;
+  --layer-toast: 60;
+
+  /* --- 레이아웃 치수 ----------------------------------------------------- */
+  --layout-header-height: 4.125rem;
+
+  /* ======================================================================
+     shadcn theme 변수 → Flyer.G 토큰 연결
+     생성된 shadcn 컴포넌트는 아래 변수만 참조한다.
+     화면에서 컴포넌트 내부 색을 덮어쓰지 말고 이 표를 고친다.
+     ====================================================================== */
+  --background: var(--color-canvas);
+  --foreground: var(--color-ink);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-accent);
+  --primary-foreground: var(--color-accent-on);
+  --secondary: var(--color-surface-muted);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-surface-muted);
+  --muted-foreground: var(--color-ink-muted);
+  --accent: var(--color-surface-muted);
+  --accent-foreground: var(--color-ink);
+  --destructive: var(--color-danger);
+  --border: var(--color-line);
+  --input: var(--color-line);
+  --ring: var(--color-focus);
+  --radius: 0.625rem;
+
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* shadcn 컴포넌트가 쓰는 --color-* 별칭. 값은 위 표에서만 바뀐다. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  /* shadcn의 hover 표면 역할. 제품 강조색(--color-accent)과 구분한다. */
+  --color-ui-accent: var(--accent);
+  --color-ui-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    /* 관리자 화면이 지원하는 최소 폭. Phase 00 문서 6절의 검증 기준. */
+    min-width: 320px;
+    @apply bg-background font-sans;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    /* 한국어는 단어 단위로 끊고, 자간을 살짝 좁혀 밀도를 맞춘다. */
+    word-break: keep-all;
+    text-wrap: pretty;
+    letter-spacing: -0.01em;
+    @apply bg-background text-foreground;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+}
+
+/*
+ * TV 플레이어 배경.
+ *
+ * 어두운 면이다. 로비의 65인치 화면에서 흰 바탕은 조명처럼 빛나고, 포스터보다
+ * 바탕이 먼저 보인다. 어두운 바탕 위에서는 포스터 색이 화면의 주인공이 되고
+ * 밤에도 눈부시지 않다. 공공 화면이라 움직이지 않는다. Raspberry Pi에서 상시
+ * 애니메이션은 불필요한 연산이다. (명세 9.2, 9.6)
+ *
+ * 색 토큰만 이 스코프에서 재매핑한다. TV 컴포넌트는 관리자 화면과 같은
+ * 유틸리티(text-ink 등)를 쓰므로 여기서 값만 바뀐다.
+ */
+.tv-surface {
+  background: var(--color-stage);
+  --color-ink: #f6f6f7;
+  --color-ink-muted: #b4b4bb;
+  --color-ink-subtle: #8b8b93;
+  --color-canvas: #1c1c1f;
+  --color-surface: #242428;
+  --color-surface-muted: #2b2b30;
+  --color-line: #35353b;
+  --color-line-strong: #4a4a52;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
